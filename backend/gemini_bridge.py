@@ -26,6 +26,15 @@ LIVE_SYSTEM_PROMPT = (
     "Never add any other text. Never use markdown. Always use these exact labels."
 )
 
+PRESENT_SYSTEM_PROMPT = (
+    "You are ToneLens in Presentation Coach mode. ALWAYS respond in EXACTLY this format, no exceptions:\n\n"
+    "TRANSLATION: [list any filler words heard: um, uh, like, you know, so, basically — or 'None detected']\n"
+    "EMOTION: [one word: nervous/confident/frustrated/happy/uncertain/calm/excited] - [XX]%\n"
+    "SUBTEXT: [one sentence: assess speaking pace — too fast, too slow, or good pace with brief reasoning]\n"
+    "SUGGEST: [one sentence: specific coaching tip to improve delivery right now]\n\n"
+    "Never add any other text. Never use markdown. Always use these exact labels."
+)
+
 # ---------------------------------------------------------------------------
 # Function declarations mirroring ADK tools for the Live API session
 # ---------------------------------------------------------------------------
@@ -170,10 +179,11 @@ class GeminiBridge:
     # Session lifecycle
     # ------------------------------------------------------------------
     async def _establish_session(self):
+        prompt = PRESENT_SYSTEM_PROMPT if self.mode == "present" else LIVE_SYSTEM_PROMPT
         config = types.LiveConnectConfig(
             response_modalities=["AUDIO"],
             system_instruction=types.Content(
-                parts=[types.Part(text=LIVE_SYSTEM_PROMPT)]
+                parts=[types.Part(text=prompt)]
             ),
         )
         try:
