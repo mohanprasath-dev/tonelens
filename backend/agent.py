@@ -1,248 +1,307 @@
-import asyncio
+import json
 import logging
+import os
+import re
+from datetime import datetime, timezone
 
-from google.adk.agents import Agent
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = (
-    "You are ToneLens, a real-time emotional intelligence agent.\n"
-    "You simultaneously see through the user's camera and hear "
-    "what people around them are saying.\n\n"
-    "For every utterance you detect, respond in this EXACT format:\n\n"
-    "TRANSLATION: [If not English, translate to English. "
-    "If English, write 'English detected']\n"
-    "EMOTION: [Single word: nervous/confident/frustrated/happy/"
-    "uncertain/deceptive/calm/excited] - [XX]% confidence\n"
-    "SUBTEXT: [One sentence: what they are actually meaning]\n"
-    "SUGGEST: [One sentence: how the user should respond, "
-    "tailored to their current mode]\n\n"
-    "Rules:\n"
-    "- Never exceed 1 sentence per section\n"
-    "- Respond within 2 seconds\n"
-    "- Be direct, not verbose\n"
-    "- Consider cultural context in your subtext\n"
-    "- Tailor suggestions to mode: "
-    "travel=be helpful and warm, "
-    "meeting=be strategic and professional, "
-    "present=focus on audience engagement\n\n"
-    "Supported languages: English, French, Spanish, Japanese, "
-    "Hindi, Tamil, Mandarin, Arabic, Portuguese, German, "
-    "Korean, Italian, Russian, Dutch"
-)
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "notional-cirrus-458606-e0")
+REGION = "us-central1"
 
 
-# ---------------------------------------------------------------------------
-# Tool 1: analyze_emotion
-# ---------------------------------------------------------------------------
-def analyze_emotion(face_description: str, voice_tone: str) -> dict:
-    """Analyze emotional state from facial expression and voice tone.
-
-    Args:
-        face_description: Description of the person's facial expression and body language.
-        voice_tone: Description of the person's voice tone, pitch, and speaking pattern.
-
-    Returns:
-        Dictionary with emotion label, confidence score, and observed signals.
-    """
-    signals: list[str] = []
-
-    face_lower = face_description.lower()
-    voice_lower = voice_tone.lower()
-
-    facial_map = {
-        "frown": "furrowed brow",
-        "smile": "genuine smile",
-        "wide eyes": "widened eyes",
-        "narrow": "narrowed eyes",
-        "lip": "lip tension",
-        "jaw": "jaw clenching",
-        "blink": "rapid blinking",
-        "eyebrow": "eyebrow movement",
-        "avoid": "avoiding eye contact",
-        "look away": "gaze avoidance",
-        "nod": "head nodding",
-        "shake": "head shaking",
-        "sweat": "visible perspiration",
-        "red": "facial flushing",
-        "pale": "facial pallor",
-        "tense": "facial tension",
-        "relax": "relaxed expression",
-    }
-    for kw, sig in facial_map.items():
-        if kw in face_lower:
-            signals.append(sig)
-
-    voice_map = {
-        "shak": "voice trembling",
-        "loud": "raised volume",
-        "quiet": "lowered volume",
-        "fast": "rapid speech",
-        "slow": "deliberate pacing",
-        "high": "elevated pitch",
-        "low": "lowered pitch",
-        "monotone": "flat intonation",
-        "crack": "voice cracking",
-        "stutter": "speech hesitation",
-        "pause": "frequent pauses",
-        "clear": "clear articulation",
-        "mumbl": "mumbling",
-        "firm": "firm tone",
-        "soft": "soft tone",
-    }
-    for kw, sig in voice_map.items():
-        if kw in voice_lower:
-            signals.append(sig)
-
-    emotion_indicators = {
-        "nervous": ["trembling", "hesitation", "rapid", "perspiration", "blinking", "pallor"],
-        "confident": ["firm", "clear", "genuine smile", "relaxed", "deliberate"],
-        "frustrated": ["clenching", "furrowed", "raised volume", "tension", "narrowed"],
-        "happy": ["smile", "elevated pitch", "nodding", "relaxed"],
-        "uncertain": ["pauses", "mumbling", "avoidance", "gaze", "hesitation"],
-        "deceptive": ["avoidance", "gaze", "blinking", "hesitation", "tension"],
-        "calm": ["relaxed", "deliberate", "soft", "clear", "lowered"],
-        "excited": ["raised volume", "rapid", "elevated pitch", "widened", "smile"],
-    }
-
-    best_emotion = "calm"
-    best_score = 0
-    for emo, indicators in emotion_indicators.items():
-        score = sum(1 for ind in indicators if any(ind in s for s in signals))
-        if score > best_score:
-            best_score = score
-            best_emotion = emo
-
-    confidence = min(0.95, 0.5 + (best_score * 0.1)) if signals else 0.7
-
-    return {
-        "emotion": best_emotion,
-        "confidence": round(confidence, 2),
-        "signals": signals[:5],
-    }
-
-
-# ---------------------------------------------------------------------------
-# Tool 2: get_cultural_context
-# ---------------------------------------------------------------------------
-def get_cultural_context(text: str, language: str, situation: str) -> dict:
-    """Provide cultural context for a phrase in a specific language and situation.
-
-    Args:
-        text: The phrase or expression to analyze.
-        language: The source language of the text.
-        situation: The context in which the phrase was used.
-
-    Returns:
-        Dictionary with literal_meaning, actual_meaning, and cultural_note.
-    """
-    return {
-        "literal_meaning": text,
-        "actual_meaning": (
-            f"In the context of {situation}, this {language} expression "
-            "conveys a nuanced meaning beyond its literal translation."
-        ),
-        "cultural_note": (
-            f"In {language}-speaking cultures, this type of expression is "
-            f"commonly used in {situation} situations and may carry implicit "
-            "social expectations."
-        ),
-    }
-
-
-# ---------------------------------------------------------------------------
-# Tool 3: suggest_response
-# ---------------------------------------------------------------------------
-def suggest_response(emotion: str, words: str, mode: str) -> str:
-    """Generate a mode-appropriate response suggestion.
-
-    Args:
-        emotion: The detected emotion (nervous/confident/frustrated/happy/uncertain/deceptive/calm/excited).
-        words: What the speaker said.
-        mode: The user's current mode (travel/meeting/present).
-
-    Returns:
-        A one-sentence response suggestion.
-    """
-    strategies = {
-        "travel": {
-            "nervous": "Smile warmly and speak slowly to help them feel comfortable communicating with you.",
-            "confident": "Match their energy with a friendly and open response to build rapport.",
-            "frustrated": "Acknowledge their frustration with empathy and ask how you can help.",
-            "happy": "Share in their enthusiasm and use this positive moment to connect.",
-            "uncertain": "Offer gentle reassurance and clarify your needs simply.",
-            "deceptive": "Stay polite but verify key details independently before proceeding.",
-            "calm": "Respond naturally and take the opportunity to ask for local recommendations.",
-            "excited": "Show genuine interest in what excites them to deepen the cultural exchange.",
-        },
-        "meeting": {
-            "nervous": "Create psychological safety by acknowledging their point before adding yours.",
-            "confident": "Build on their momentum with a strategic follow-up question.",
-            "frustrated": "Redirect to common ground and propose a concrete next step.",
-            "happy": "Leverage this positive energy to advance your key agenda item.",
-            "uncertain": "Provide clear data points to help them reach a decision.",
-            "deceptive": "Ask for specific examples or data to ground the conversation in facts.",
-            "calm": "Present your strongest argument while the atmosphere is neutral.",
-            "excited": "Channel their enthusiasm toward actionable commitments.",
-        },
-        "present": {
-            "nervous": "Use an inclusive phrase to bring them into the discussion and ease their tension.",
-            "confident": "Engage them as an ally by asking them to elaborate on their point.",
-            "frustrated": "Pause and address their concern directly to keep the audience engaged.",
-            "happy": "Amplify their energy with an interactive moment for the whole audience.",
-            "uncertain": "Offer a clear example or analogy to address their confusion.",
-            "deceptive": "Tactfully redirect the conversation back to verifiable points.",
-            "calm": "Introduce a thought-provoking question to elevate audience engagement.",
-            "excited": "Build on their excitement to create a memorable peak moment in your presentation.",
-        },
-    }
-    mode_map = strategies.get(mode, strategies["travel"])
-    return mode_map.get(
-        emotion,
-        f"Listen attentively and respond thoughtfully to what they said.",
+def _vertex_client() -> genai.Client:
+    return genai.Client(
+        vertexai=True,
+        project=PROJECT_ID,
+        location=REGION,
     )
 
 
 # ---------------------------------------------------------------------------
-# Tool 4: log_exchange
+# Tool 1: search_cultural_context
 # ---------------------------------------------------------------------------
-async def log_exchange_tool(session_id: str, data: dict) -> bool:
-    """Log a conversation exchange to the Firestore session store.
+async def search_cultural_context(language: str, phrase: str) -> dict:
+    """Use Vertex AI Gemini to generate a cultural context insight for a phrase.
 
     Args:
-        session_id: The session identifier.
-        data: Dictionary containing translation, emotion, subtext, and suggestion.
+        language: The language of the phrase (e.g. French, Japanese, Hindi).
+        phrase: The non-English phrase or expression to look up.
 
     Returns:
-        True on success, False on failure.
+        Dict with tip, do, avoid, and language keys.
     """
     try:
-        from backend import session_manager
-
-        await session_manager.log_exchange(session_id, data)
-        return True
+        client = _vertex_client()
+        prompt = (
+            f"You are a cultural intelligence expert.\n"
+            f'For the {language} phrase: "{phrase}"\n'
+            f"Respond ONLY as a valid JSON object with exactly these four string keys:\n"
+            f'{{"tip": "one sentence cultural insight", '
+            f'"do": "one thing to do", '
+            f'"avoid": "one thing to avoid", '
+            f'"language": "{language}"}}'
+        )
+        response = await client.aio.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
+        text = (response.text or "").strip()
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
     except Exception as e:
-        logger.error(f"Failed to log exchange: {e}")
-        return False
+        logger.warning(f"search_cultural_context failed: {e}")
+
+    return {
+        "tip": f"This phrase carries cultural nuance in {language}-speaking communities.",
+        "do": "Listen attentively and respond with respect.",
+        "avoid": "Avoid assuming the literal translation captures the full meaning.",
+        "language": language,
+    }
 
 
 # ---------------------------------------------------------------------------
-# Function registry (used by GeminiBridge for Live API tool calls)
+# Tool 2: find_emergency_services
 # ---------------------------------------------------------------------------
-TOOL_FUNCTIONS = {
-    "analyze_emotion": analyze_emotion,
-    "get_cultural_context": get_cultural_context,
-    "suggest_response": suggest_response,
-    "log_exchange": log_exchange_tool,
+def find_emergency_services(
+    situation: str, latitude: float, longitude: float
+) -> dict:
+    """Return emergency service map links for the user's current location.
+
+    Args:
+        situation: Brief description of the emergency situation.
+        latitude: User's current latitude coordinate.
+        longitude: User's current longitude coordinate.
+
+    Returns:
+        Dict with message, map URLs, emergency number, and situation.
+    """
+    return {
+        "message": "Emergency services information",
+        "maps_hospital": (
+            f"https://www.google.com/maps/search/hospital/@{latitude},{longitude},15z"
+        ),
+        "maps_police": (
+            f"https://www.google.com/maps/search/police/@{latitude},{longitude},15z"
+        ),
+        "emergency_number": "112",
+        "situation": situation,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Tool 3: save_meeting_note
+# ---------------------------------------------------------------------------
+async def save_meeting_note(
+    session_id: str, key_point: str, speaker_emotion: str
+) -> dict:
+    """Save an important meeting note to Firestore.
+
+    Args:
+        session_id: The current session identifier.
+        key_point: The important point, decision, or action item to save.
+        speaker_emotion: The speaker's current emotional state.
+
+    Returns:
+        Dict with saved status, key_point, and note_id.
+    """
+    try:
+        from google.cloud import firestore  # type: ignore
+
+        db = firestore.AsyncClient()
+        ref = (
+            db.collection("sessions")
+            .document(session_id)
+            .collection("notes")
+            .document()
+        )
+        await ref.set(
+            {
+                "key_point": key_point,
+                "speaker_emotion": speaker_emotion,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        return {"saved": True, "key_point": key_point, "note_id": ref.id}
+    except Exception as e:
+        logger.warning(f"save_meeting_note failed: {e}")
+        return {"saved": False, "key_point": key_point, "note_id": ""}
+
+
+# ---------------------------------------------------------------------------
+# Tool 4: get_stress_report
+# ---------------------------------------------------------------------------
+async def get_stress_report(session_id: str) -> dict:
+    """Query Firestore for recent exchanges and return a stress analysis.
+
+    Args:
+        session_id: The current session identifier.
+
+    Returns:
+        Dict with average_stress, dominant_emotion, recommendation, total_exchanges.
+    """
+    stress_map = {
+        "angry": 1.0,
+        "frustrated": 0.9,
+        "nervous": 0.75,
+        "uncertain": 0.6,
+        "excited": 0.4,
+        "calm": 0.2,
+        "confident": 0.15,
+        "happy": 0.1,
+    }
+    try:
+        from collections import Counter
+
+        from google.cloud import firestore  # type: ignore
+
+        db = firestore.AsyncClient()
+        docs = (
+            await db.collection("sessions")
+            .document(session_id)
+            .collection("exchanges")
+            .order_by("timestamp", direction=firestore.Query.DESCENDING)
+            .limit(20)
+            .get()
+        )
+        emotions: list[str] = [doc.to_dict().get("emotion", "calm") for doc in docs]
+
+        if not emotions:
+            return {
+                "average_stress": 0.2,
+                "dominant_emotion": "calm",
+                "recommendation": "No exchanges recorded yet.",
+                "total_exchanges": 0,
+            }
+
+        stress_values = [stress_map.get(e, 0.5) for e in emotions]
+        avg = sum(stress_values) / len(stress_values)
+        dominant = Counter(emotions).most_common(1)[0][0]
+
+        if avg > 0.7:
+            rec = "High stress detected. Consider pausing for a brief break and breathing deeply."
+        elif avg > 0.4:
+            rec = "Moderate stress — stay grounded and maintain steady breathing."
+        else:
+            rec = "Stress is low. You are managing the conversation well."
+
+        return {
+            "average_stress": round(avg, 2),
+            "dominant_emotion": dominant,
+            "recommendation": rec,
+            "total_exchanges": len(emotions),
+        }
+    except Exception as e:
+        logger.warning(f"get_stress_report failed: {e}")
+        return {
+            "average_stress": 0.5,
+            "dominant_emotion": "unknown",
+            "recommendation": "Unable to retrieve stress data at this time.",
+            "total_exchanges": 0,
+        }
+
+
+# ---------------------------------------------------------------------------
+# Exports used by GeminiBridge
+# ---------------------------------------------------------------------------
+TOOL_FUNCTIONS: dict = {
+    "search_cultural_context": search_cultural_context,
+    "find_emergency_services": find_emergency_services,
+    "save_meeting_note": save_meeting_note,
+    "get_stress_report": get_stress_report,
 }
 
-
-# ---------------------------------------------------------------------------
-# ADK Agent definition
-# ---------------------------------------------------------------------------
-tonelens_agent = Agent(
-    name="ToneLens",
-    model="gemini-2.0-flash-live-001",
-    instruction=SYSTEM_PROMPT,
-    tools=[analyze_emotion, get_cultural_context, suggest_response, log_exchange_tool],
-)
+FUNCTION_DECLARATIONS = [
+    types.FunctionDeclaration(
+        name="search_cultural_context",
+        description=(
+            "Search for cultural context and tips for a phrase in a given language. "
+            "Call this IMMEDIATELY when non-English speech is detected, before responding."
+        ),
+        parameters={
+            "type": "OBJECT",
+            "properties": {
+                "language": {
+                    "type": "STRING",
+                    "description": "The language of the phrase (e.g. French, Japanese, Hindi)",
+                },
+                "phrase": {
+                    "type": "STRING",
+                    "description": "The non-English phrase or expression to look up",
+                },
+            },
+            "required": ["language", "phrase"],
+        },
+    ),
+    types.FunctionDeclaration(
+        name="find_emergency_services",
+        description=(
+            "Find nearby hospitals and police stations. Call this immediately when you "
+            "detect fear, danger, distress, or words like help, emergency, hurt, scared, or danger."
+        ),
+        parameters={
+            "type": "OBJECT",
+            "properties": {
+                "situation": {
+                    "type": "STRING",
+                    "description": "Brief description of the emergency situation",
+                },
+                "latitude": {
+                    "type": "NUMBER",
+                    "description": "User's current latitude coordinate",
+                },
+                "longitude": {
+                    "type": "NUMBER",
+                    "description": "User's current longitude coordinate",
+                },
+            },
+            "required": ["situation", "latitude", "longitude"],
+        },
+    ),
+    types.FunctionDeclaration(
+        name="save_meeting_note",
+        description=(
+            "Save an important meeting note to the session. Call this in meeting mode "
+            "when the speaker states a decision, action item, or key fact."
+        ),
+        parameters={
+            "type": "OBJECT",
+            "properties": {
+                "session_id": {
+                    "type": "STRING",
+                    "description": "The current session identifier",
+                },
+                "key_point": {
+                    "type": "STRING",
+                    "description": "The important point, decision, or action item to save",
+                },
+                "speaker_emotion": {
+                    "type": "STRING",
+                    "description": "The speaker's current emotional state",
+                },
+            },
+            "required": ["session_id", "key_point", "speaker_emotion"],
+        },
+    ),
+    types.FunctionDeclaration(
+        name="get_stress_report",
+        description=(
+            "Get a stress analysis report for the current session. Call this when the "
+            "user asks how they are doing, or proactively after 10 or more exchanges."
+        ),
+        parameters={
+            "type": "OBJECT",
+            "properties": {
+                "session_id": {
+                    "type": "STRING",
+                    "description": "The current session identifier",
+                },
+            },
+            "required": ["session_id"],
+        },
+    ),
+]

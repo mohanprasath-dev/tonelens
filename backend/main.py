@@ -95,6 +95,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     # Reconnect with updated system prompt
                     await bridge.disconnect()
                     await bridge.connect(websocket, effective_id, mode=new_mode)
+
+            elif msg_type == "location":
+                lat = msg.get("lat", 0.0)
+                lng = msg.get("lng", 0.0)
+                if isinstance(lat, (int, float)) and isinstance(lng, (int, float)):
+                    bridge.user_lat = float(lat)
+                    bridge.user_lng = float(lng)
+                    logger.info(f"[{session_id}] Location updated: {lat},{lng}")
             else:
                 logger.warning(f"[{session_id}] Unknown message type: {msg_type}")
 

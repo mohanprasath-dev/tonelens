@@ -9,30 +9,46 @@ import time
 from google import genai
 from google.genai import types
 
-from backend.agent import SYSTEM_PROMPT, TOOL_FUNCTIONS
+from backend.agent import (
+    find_emergency_services,
+    save_meeting_note,
+    search_cultural_context,
+)
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ID = "notional-cirrus-458606-e0"
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "notional-cirrus-458606-e0")
 REGION = "us-central1"
 MODEL = "gemini-2.5-flash-native-audio-latest"
 
-LIVE_SYSTEM_PROMPT = (
-    "You are ToneLens. Your ENTIRE response must be EXACTLY these 4 lines, nothing else:\n"
+# ---------------------------------------------------------------------------
+# System prompts
+# ---------------------------------------------------------------------------
+AGENT_SYSTEM_PROMPT = (
+    "You are ToneLens, a live real-time emotional intelligence agent. "
+    "You see through the user's camera and hear what people around them are saying.\n\n"
+    "For every utterance you detect, respond in EXACTLY these 4 lines, nothing else:\n\n"
     "TRANSLATION: [if not English, translate to English. If English, write 'English detected']\n"
     "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
-    "SUBTEXT: [exactly one sentence: the real meaning]\n"
+    "SUBTEXT: [exactly one sentence: the real meaning behind the words]\n"
     "SUGGEST: [exactly one sentence: how to respond]\n\n"
     "RULES:\n"
     "- Never write anything before TRANSLATION:\n"
     "- Never write anything after the SUGGEST line\n"
     "- Never use markdown, asterisks, or bold\n"
     "- Never explain your reasoning\n"
-    "- Always output exactly 4 lines"
+    "- Always output exactly 4 lines\n"
+    "- Tailor suggestions to mode: "
+    "travel=be helpful and warm, "
+    "meeting=be strategic and professional, "
+    "present=focus on audience engagement\n"
+    "Supported languages: English, French, Spanish, Japanese, Hindi, Tamil, "
+    "Mandarin, Arabic, Portuguese, German, Korean, Italian, Russian, Dutch"
 )
 
 PRESENT_SYSTEM_PROMPT = (
-    "You are ToneLens in Presentation Coach mode. Your ENTIRE response must be EXACTLY these 4 lines, nothing else:\n"
+    "You are ToneLens in Presentation Coach mode.\n\n"
+    "Your ENTIRE structured response must be EXACTLY these 4 lines, nothing else:\n"
     "TRANSLATION: [list any filler words heard: um, uh, like, you know, so, basically — or 'None detected']\n"
     "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
     "SUBTEXT: [exactly one sentence: assess speaking pace — too fast, too slow, or good pace]\n"
@@ -45,82 +61,17 @@ PRESENT_SYSTEM_PROMPT = (
     "- Always output exactly 4 lines"
 )
 
-# ---------------------------------------------------------------------------
-# Function declarations mirroring ADK tools for the Live API session
-# ---------------------------------------------------------------------------
-FUNCTION_DECLARATIONS = [
-    types.FunctionDeclaration(
-        name="analyze_emotion",
-        description="Analyze emotional state from facial expression and voice tone descriptions",
-        parameters={
-            "type": "OBJECT",
-            "properties": {
-                "face_description": {
-                    "type": "STRING",
-                    "description": "Description of the person's facial expression and body language",
-                },
-                "voice_tone": {
-                    "type": "STRING",
-                    "description": "Description of the person's voice tone, pitch, and speaking pattern",
-                },
-            },
-            "required": ["face_description", "voice_tone"],
-        },
-    ),
-    types.FunctionDeclaration(
-        name="get_cultural_context",
-        description="Provide cultural context for a phrase or expression in a specific language",
-        parameters={
-            "type": "OBJECT",
-            "properties": {
-                "text": {"type": "STRING", "description": "The phrase to analyze"},
-                "language": {"type": "STRING", "description": "Source language"},
-                "situation": {"type": "STRING", "description": "Context of the phrase"},
-            },
-            "required": ["text", "language", "situation"],
-        },
-    ),
-    types.FunctionDeclaration(
-        name="suggest_response",
-        description="Generate a contextually appropriate response suggestion",
-        parameters={
-            "type": "OBJECT",
-            "properties": {
-                "emotion": {"type": "STRING", "description": "Detected emotion"},
-                "words": {"type": "STRING", "description": "What the speaker said"},
-                "mode": {
-                    "type": "STRING",
-                    "description": "User mode: travel, meeting, or present",
-                },
-            },
-            "required": ["emotion", "words", "mode"],
-        },
-    ),
-    types.FunctionDeclaration(
-        name="log_exchange",
-        description="Log a conversation exchange to the session store",
-        parameters={
-            "type": "OBJECT",
-            "properties": {
-                "session_id": {"type": "STRING", "description": "Session identifier"},
-                "data": {"type": "OBJECT", "description": "Exchange data to log"},
-            },
-            "required": ["session_id", "data"],
-        },
-    ),
-]
-
 
 class GeminiBridge:
     """Manages a bidirectional live streaming session with the Gemini Live API."""
 
     def __init__(self):
-        # Google AI Studio client — used exclusively for the Gemini Live session
+        # Google AI Studio client — used for the Gemini Live session
         self.client = genai.Client(
             api_key=os.environ.get("GOOGLE_API_KEY"),
-            http_options={"api_version": "v1alpha"}
+            http_options={"api_version": "v1alpha"},
         )
-        # Vertex AI client — used for the reformat step (billed to GCP project)
+        # Vertex AI client — used for the reformat step
         self._vertex_client = genai.Client(
             vertexai=True,
             project=os.environ.get("GOOGLE_CLOUD_PROJECT", PROJECT_ID),
@@ -136,6 +87,9 @@ class GeminiBridge:
         self.last_frame_time: float = 0.0
         self.reconnect_attempts: int = 0
         self._text_buffer: str = ""
+        # User location — defaults to Chennai; overwritten when frontend sends GPS fix
+        self.user_lat: float = 13.0827
+        self.user_lng: float = 80.2707
 
     # ------------------------------------------------------------------
     # Public API
@@ -196,9 +150,11 @@ class GeminiBridge:
     # Session lifecycle
     # ------------------------------------------------------------------
     async def _establish_session(self):
-        prompt = PRESENT_SYSTEM_PROMPT if self.mode == "present" else LIVE_SYSTEM_PROMPT
+        prompt = PRESENT_SYSTEM_PROMPT if self.mode == "present" else AGENT_SYSTEM_PROMPT
+        # NOTE: gemini-2.5-flash-native-audio-latest does not support
+        # function_declarations in LiveConnectConfig — tools are omitted.
         config = types.LiveConnectConfig(
-            response_modalities=["AUDIO"],
+            response_modalities=["AUDIO", "TEXT"],
             system_instruction=types.Content(
                 parts=[types.Part(text=prompt)]
             ),
@@ -233,10 +189,7 @@ class GeminiBridge:
             logger.error(f"Receive loop error ({err_name}): {e}")
             if "ResourceExhausted" in err_name or "ResourceExhausted" in str(e):
                 await self._send_ws(
-                    {
-                        "type": "error",
-                        "msg": "Rate limit reached. Retrying in 5 seconds...",
-                    }
+                    {"type": "error", "msg": "Rate limit reached. Retrying in 5 seconds..."}
                 )
                 await asyncio.sleep(5)
             if self._connected:
@@ -244,7 +197,6 @@ class GeminiBridge:
 
     async def _process_message(self, msg):
         try:
-            # --- Model content ---
             if hasattr(msg, "server_content") and msg.server_content:
                 sc = msg.server_content
                 if hasattr(sc, "model_turn") and sc.model_turn:
@@ -252,21 +204,13 @@ class GeminiBridge:
                         if hasattr(part, "text") and part.text:
                             self._text_buffer += part.text
                         if hasattr(part, "inline_data") and part.inline_data:
-                            audio_b64 = base64.b64encode(
-                                part.inline_data.data
-                            ).decode()
-                            await self._send_ws(
-                                {"type": "audio", "data": audio_b64}
-                            )
+                            audio_b64 = base64.b64encode(part.inline_data.data).decode()
+                            await self._send_ws({"type": "audio", "data": audio_b64})
                 if hasattr(sc, "turn_complete") and sc.turn_complete:
                     if self._text_buffer:
                         clean = await self._reformat_response(self._text_buffer)
                         self._text_buffer = ""
                         await self._parse_and_send(clean)
-
-            # --- Tool calls ---
-            if hasattr(msg, "tool_call") and msg.tool_call:
-                await self._handle_tool_call(msg.tool_call)
         except Exception as e:
             logger.warning(f"Error processing message: {e}")
 
@@ -299,26 +243,19 @@ class GeminiBridge:
                             source_lang = lang
                             break
                 await self._send_ws(
-                    {
-                        "type": "translation",
-                        "text": content,
-                        "source_language": source_lang,
-                    }
+                    {"type": "translation", "text": content, "source_language": source_lang}
                 )
                 exchange["translation"] = content
+                exchange["source_language"] = source_lang
 
             elif upper.startswith("EMOTION:"):
                 content = line.split(":", 1)[1].strip()
                 label, confidence = self._parse_emotion(content)
                 await self._send_ws(
-                    {
-                        "type": "emotion",
-                        "label": label,
-                        "confidence": confidence,
-                        "signals": [],
-                    }
+                    {"type": "emotion", "label": label, "confidence": confidence, "signals": []}
                 )
                 exchange["emotion"] = label
+                exchange["emotion_conf"] = confidence
 
             elif upper.startswith("SUBTEXT:"):
                 content = line.split(":", 1)[1].strip()
@@ -335,11 +272,72 @@ class GeminiBridge:
 
         if exchange:
             try:
-                from backend.agent import log_exchange_tool
+                from backend import session_manager
 
-                await log_exchange_tool(self.session_id, exchange)
+                await session_manager.log_exchange(self.session_id, exchange)
             except Exception as e:
                 logger.warning(f"Failed to log exchange: {e}")
+
+            # Fire keyword-based agent actions without blocking the WS send path
+            asyncio.create_task(self._run_keyword_actions(exchange, text))
+
+    # ------------------------------------------------------------------
+    # Keyword-driven agent actions (replaces Live API function_declarations)
+    # ------------------------------------------------------------------
+    async def _run_keyword_actions(self, exchange: dict, raw_text: str):
+        translation  = exchange.get("translation", "")
+        source_lang  = exchange.get("source_language", "Unknown")
+        emotion      = exchange.get("emotion", "calm")
+        emotion_conf = exchange.get("emotion_conf", 0.7)
+        subtext      = exchange.get("subtext", "")
+
+        # 1. Non-English speech → cultural context tip
+        if (
+            translation
+            and "english detected" not in translation.lower()
+            and source_lang not in ("Unknown", "English")
+        ):
+            try:
+                result = await search_cultural_context(source_lang, translation)
+                await self._send_ws(
+                    {"type": "agent_action", "action": "cultural_tip", "data": result}
+                )
+            except Exception as e:
+                logger.warning(f"Cultural context lookup failed: {e}")
+
+        # 2. Distress signal → emergency services
+        distress_text = (raw_text + " " + subtext).lower()
+        distress_match = bool(
+            re.search(r"\b(help|emergency|hurt|scared|danger|distress|threat)\b", distress_text)
+        )
+        high_stress = emotion in ("frustrated", "angry") and emotion_conf > 0.80
+        if distress_match or high_stress:
+            try:
+                situation = subtext or f"Distress detected ({emotion})"
+                result = find_emergency_services(situation, self.user_lat, self.user_lng)
+                await self._send_ws(
+                    {"type": "agent_action", "action": "emergency", "data": result}
+                )
+            except Exception as e:
+                logger.warning(f"Emergency services lookup failed: {e}")
+
+        # 3. Meeting mode + important subtext → save note
+        if self.mode == "meeting" and subtext:
+            important = bool(
+                re.search(
+                    r"\b(decided|will|must|deadline|action|commit|agree|plan"
+                    r"|next step|responsible|by end|assigned)\b",
+                    subtext.lower(),
+                )
+            )
+            if important:
+                try:
+                    result = await save_meeting_note(self.session_id, subtext, emotion)
+                    await self._send_ws(
+                        {"type": "agent_action", "action": "note_saved", "data": result}
+                    )
+                except Exception as e:
+                    logger.warning(f"Save meeting note failed: {e}")
 
     # ------------------------------------------------------------------
     # Two-model pipeline: reformat Live API output via Flash
@@ -394,82 +392,20 @@ class GeminiBridge:
         return label, confidence
 
     # ------------------------------------------------------------------
-    # Tool call handling
-    # ------------------------------------------------------------------
-    async def _handle_tool_call(self, tool_call):
-        try:
-            responses = []
-            for fc in tool_call.function_calls:
-                func = TOOL_FUNCTIONS.get(fc.name)
-                if not func:
-                    logger.warning(f"Unknown tool: {fc.name}")
-                    responses.append(
-                        types.FunctionResponse(
-                            name=fc.name,
-                            response={"error": f"Unknown tool: {fc.name}"},
-                        )
-                    )
-                    continue
-
-                args = dict(fc.args) if fc.args else {}
-                if fc.name == "log_exchange":
-                    args.setdefault("session_id", self.session_id)
-
-                if asyncio.iscoroutinefunction(func):
-                    result = await func(**args)
-                else:
-                    result = func(**args)
-
-                # Forward structured results to the frontend
-                if fc.name == "analyze_emotion" and isinstance(result, dict):
-                    await self._send_ws(
-                        {
-                            "type": "emotion",
-                            "label": result.get("emotion", "calm"),
-                            "confidence": result.get("confidence", 0.7),
-                            "signals": result.get("signals", []),
-                        }
-                    )
-
-                serialized = (
-                    json.dumps(result) if not isinstance(result, str) else result
-                )
-                responses.append(
-                    types.FunctionResponse(
-                        name=fc.name, response={"result": serialized}
-                    )
-                )
-
-            if responses:
-                await self.live_session.send(
-                    input=types.LiveClientToolResponse(
-                        function_responses=responses
-                    )
-                )
-        except Exception as e:
-            logger.error(f"Error handling tool call: {e}")
-
-    # ------------------------------------------------------------------
     # Reconnection
     # ------------------------------------------------------------------
     async def _try_reconnect(self):
         if self.reconnect_attempts >= 3:
             logger.error("Max reconnection attempts reached")
             await self._send_ws(
-                {
-                    "type": "error",
-                    "msg": "Connection lost. Please refresh the page.",
-                }
+                {"type": "error", "msg": "Connection lost. Please refresh the page."}
             )
             return
 
         self.reconnect_attempts += 1
-        logger.info(
-            f"Reconnection attempt {self.reconnect_attempts}/3 for {self.session_id}"
-        )
+        logger.info(f"Reconnection attempt {self.reconnect_attempts}/3 for {self.session_id}")
         await asyncio.sleep(2)
 
-        # Tear down old session
         if self._session_ctx:
             try:
                 await self._session_ctx.__aexit__(None, None, None)
