@@ -115,9 +115,16 @@ class GeminiBridge:
     """Manages a bidirectional live streaming session with the Gemini Live API."""
 
     def __init__(self):
+        # Google AI Studio client — used exclusively for the Gemini Live session
         self.client = genai.Client(
             api_key=os.environ.get("GOOGLE_API_KEY"),
             http_options={"api_version": "v1alpha"}
+        )
+        # Vertex AI client — used for the reformat step (billed to GCP project)
+        self._vertex_client = genai.Client(
+            vertexai=True,
+            project=os.environ.get("GOOGLE_CLOUD_PROJECT", PROJECT_ID),
+            location=REGION,
         )
         self.live_session = None
         self._session_ctx = None
@@ -253,8 +260,9 @@ class GeminiBridge:
                             )
                 if hasattr(sc, "turn_complete") and sc.turn_complete:
                     if self._text_buffer:
-                        await self._parse_and_send(self._text_buffer)
+                        clean = await self._reformat_response(self._text_buffer)
                         self._text_buffer = ""
+                        await self._parse_and_send(clean)
 
             # --- Tool calls ---
             if hasattr(msg, "tool_call") and msg.tool_call:
@@ -332,6 +340,40 @@ class GeminiBridge:
                 await log_exchange_tool(self.session_id, exchange)
             except Exception as e:
                 logger.warning(f"Failed to log exchange: {e}")
+
+    # ------------------------------------------------------------------
+    # Two-model pipeline: reformat Live API output via Flash
+    # ------------------------------------------------------------------
+    async def _reformat_response(self, raw_text: str) -> str:
+        mode_context = (
+            "The speaker is giving a presentation. Focus on filler words, confidence, and pace."
+            if self.mode == "present"
+            else "The speaker is in a conversation."
+        )
+        prompt = (
+            f"Extract and reformat this analysis into EXACTLY 4 lines.\n"
+            f"Output ONLY these 4 lines, nothing else:\n\n"
+            f"TRANSLATION: [if non-English detected, translate to English. Otherwise write 'English detected']\n"
+            f"EMOTION: [one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
+            f"SUBTEXT: [one sentence: the real meaning behind the words]\n"
+            f"SUGGEST: [one sentence: the best way to respond]\n\n"
+            f"Context: {mode_context}\n"
+            f"Analysis to reformat:\n{raw_text}"
+        )
+        try:
+            response = await self._vertex_client.aio.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+            )
+            formatted = response.text.strip()
+            if "TRANSLATION:" in formatted and "EMOTION:" in formatted:
+                logger.debug("Reformat succeeded")
+                return formatted
+            logger.warning("Reformat output missing required labels, using raw")
+            return raw_text
+        except Exception as e:
+            logger.warning(f"Reformat failed: {e}")
+            return raw_text
 
     @staticmethod
     def _parse_emotion(text: str) -> tuple[str, float]:
