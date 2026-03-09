@@ -71,12 +71,8 @@ class GeminiBridge:
             api_key=os.environ.get("GOOGLE_API_KEY"),
             http_options={"api_version": "v1alpha"},
         )
-        # Vertex AI client — used for the reformat step
-        self._vertex_client = genai.Client(
-            vertexai=True,
-            project=os.environ.get("GOOGLE_CLOUD_PROJECT", PROJECT_ID),
-            location=REGION,
-        )
+        # Vertex AI client — initialized lazily to avoid ADC errors on local dev
+        self._vertex_client = None
         self.live_session = None
         self._session_ctx = None
         self.websocket = None
@@ -340,6 +336,22 @@ class GeminiBridge:
                     logger.warning(f"Save meeting note failed: {e}")
 
     # ------------------------------------------------------------------
+    # Vertex AI client (lazy, with ADC fallback)
+    # ------------------------------------------------------------------
+    def _get_vertex_client(self):
+        if self._vertex_client is None:
+            try:
+                self._vertex_client = genai.Client(
+                    vertexai=True,
+                    project=os.environ.get("GOOGLE_CLOUD_PROJECT", PROJECT_ID),
+                    location=REGION,
+                )
+            except Exception as e:
+                logger.warning(f"Vertex AI client init failed: {e}")
+                return None
+        return self._vertex_client
+
+    # ------------------------------------------------------------------
     # Two-model pipeline: reformat Live API output via Flash
     # ------------------------------------------------------------------
     async def _reformat_response(self, raw_text: str) -> str:
@@ -359,7 +371,10 @@ class GeminiBridge:
             f"Analysis to reformat:\n{raw_text}"
         )
         try:
-            response = await self._vertex_client.aio.models.generate_content(
+            client = self._get_vertex_client()
+            if client is None:
+                return raw_text
+            response = await client.aio.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=prompt,
             )
