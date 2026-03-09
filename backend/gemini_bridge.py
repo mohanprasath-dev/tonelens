@@ -18,21 +18,31 @@ REGION = "us-central1"
 MODEL = "gemini-2.5-flash-native-audio-latest"
 
 LIVE_SYSTEM_PROMPT = (
-    "You are ToneLens. ALWAYS respond in EXACTLY this format, no exceptions:\n\n"
-    "TRANSLATION: [translate to English, or 'English detected']\n"
-    "EMOTION: [one word: nervous/confident/frustrated/happy/uncertain/calm/excited] - [XX]%\n"
-    "SUBTEXT: [one sentence: the real meaning behind the words]\n"
-    "SUGGEST: [one sentence: how the user should respond]\n\n"
-    "Never add any other text. Never use markdown. Always use these exact labels."
+    "You are ToneLens. Your ENTIRE response must be EXACTLY these 4 lines, nothing else:\n"
+    "TRANSLATION: [if not English, translate to English. If English, write 'English detected']\n"
+    "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
+    "SUBTEXT: [exactly one sentence: the real meaning]\n"
+    "SUGGEST: [exactly one sentence: how to respond]\n\n"
+    "RULES:\n"
+    "- Never write anything before TRANSLATION:\n"
+    "- Never write anything after the SUGGEST line\n"
+    "- Never use markdown, asterisks, or bold\n"
+    "- Never explain your reasoning\n"
+    "- Always output exactly 4 lines"
 )
 
 PRESENT_SYSTEM_PROMPT = (
-    "You are ToneLens in Presentation Coach mode. ALWAYS respond in EXACTLY this format, no exceptions:\n\n"
+    "You are ToneLens in Presentation Coach mode. Your ENTIRE response must be EXACTLY these 4 lines, nothing else:\n"
     "TRANSLATION: [list any filler words heard: um, uh, like, you know, so, basically — or 'None detected']\n"
-    "EMOTION: [one word: nervous/confident/frustrated/happy/uncertain/calm/excited] - [XX]%\n"
-    "SUBTEXT: [one sentence: assess speaking pace — too fast, too slow, or good pace with brief reasoning]\n"
-    "SUGGEST: [one sentence: specific coaching tip to improve delivery right now]\n\n"
-    "Never add any other text. Never use markdown. Always use these exact labels."
+    "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
+    "SUBTEXT: [exactly one sentence: assess speaking pace — too fast, too slow, or good pace]\n"
+    "SUGGEST: [exactly one sentence: specific coaching tip to improve delivery right now]\n\n"
+    "RULES:\n"
+    "- Never write anything before TRANSLATION:\n"
+    "- Never write anything after the SUGGEST line\n"
+    "- Never use markdown, asterisks, or bold\n"
+    "- Never explain your reasoning\n"
+    "- Always output exactly 4 lines"
 )
 
 # ---------------------------------------------------------------------------
@@ -327,7 +337,7 @@ class GeminiBridge:
     def _parse_emotion(text: str) -> tuple[str, float]:
         valid = {
             "nervous", "confident", "frustrated", "happy",
-            "uncertain", "deceptive", "calm", "excited",
+            "uncertain", "deceptive", "calm", "excited", "angry",
         }
         label = "calm"
         confidence = 0.7

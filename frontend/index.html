@@ -127,8 +127,8 @@ canvas{display:none}
 .emotion-meter-label{font-size:.8rem;color:var(--text2);margin-bottom:6px;font-weight:600;
   text-transform:capitalize;letter-spacing:.03em}
 .emotion-meter-track{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
-.emotion-meter-fill{height:100%;width:70%;border-radius:4px;background:var(--success);
-  transition:width .7s ease,background .7s ease}
+.emotion-meter-fill{height:100%;width:0;border-radius:4px;background:#22c55e;
+  transition:width .5s ease,background-color .5s ease}
 
 /* ── History sidebar ─────────────────────────────────────── */
 #history-sidebar{width:0;overflow:hidden;transition:width .3s ease;flex-shrink:0;
@@ -336,16 +336,17 @@ document.getElementById("closeHistoryBtn").addEventListener("click", function(){
 
 const emojiMap = {
   nervous:"😰", confident:"💪", frustrated:"😤", happy:"😊",
-  uncertain:"🤔", deceptive:"⚡", calm:"😌", excited:"🚀"
+  uncertain:"🤔", deceptive:"⚡", calm:"😌", excited:"🚀", angry:"😡"
 };
 const colorMap = {
   nervous:"#f59e0b", confident:"#10b981", frustrated:"#ef4444", happy:"#10b981",
-  uncertain:"#6366f1", deceptive:"#ef4444", calm:"#10b981", excited:"#6366f1"
+  uncertain:"#6366f1", deceptive:"#ef4444", calm:"#10b981", excited:"#3b82f6", angry:"#ef4444"
 };
 const meterColorMap = {
-  calm:"#10b981", happy:"#10b981", confident:"#10b981", excited:"#10b981",
-  nervous:"#f59e0b", uncertain:"#f59e0b",
-  frustrated:"#ef4444", deceptive:"#ef4444"
+  calm:"#22c55e", happy:"#22c55e", confident:"#22c55e",
+  nervous:"#eab308", uncertain:"#eab308",
+  frustrated:"#ef4444", angry:"#ef4444", deceptive:"#ef4444",
+  excited:"#3b82f6"
 };
 const modeLabels = {
   travel:  { translation:"&#127760; Translation",      subtext:"&#129504; Emotional Context", suggestion:"&#128161; Suggestion" },
@@ -361,8 +362,9 @@ function applyModeLabels(mode){
 function updateEmotionMeter(label, conf){
   var color = meterColorMap[label] || "#6366f1";
   $emotionMeterFill.style.width = conf + "%";
-  $emotionMeterFill.style.background = color;
-  $emotionMeterLabel.textContent = label + " \u2014 " + conf + "%";
+  $emotionMeterFill.style.backgroundColor = color;
+  var display = label.charAt(0).toUpperCase() + label.slice(1);
+  $emotionMeterLabel.textContent = display + " \u2014 " + conf + "%";
 }
 function logToHistory(exchange){
   if(!exchange || (!exchange.emotion && !exchange.subtext && !exchange.translation)) return;
@@ -479,20 +481,27 @@ function parseResponse(text){
   if(!text) return;
   var lines = text.split("\n");
   var exchange = {};
+  var structuredFound = false;
+
   lines.forEach(function(line){
     line = line.trim();
-    var upper = line.toUpperCase();
-    if(upper.startsWith("TRANSLATION:")){
-      var content = line.split(":",2)[1].trim();
+    if(!line) return;
+    var lower = line.toLowerCase();
+
+    if(lower.startsWith("translation:")){
+      structuredFound = true;
+      var content = line.slice(line.indexOf(":") + 1).trim();
       typeText($translationText, content);
       exchange.translation = content;
-    } else if(upper.startsWith("EMOTION:")){
-      var content = line.split(":",2)[1].trim();
-      var dash = content.lastIndexOf("-");
-      var label = (dash > -1 ? content.substring(0, dash) : content).trim().toLowerCase();
-      var pct   = dash > -1 ? content.substring(dash+1).trim() : "70%";
-      var conf  = parseInt(pct) || 70;
-      $emoIcon.textContent = emojiMap[label] || "😌";
+
+    } else if(lower.startsWith("emotion:")){
+      structuredFound = true;
+      var content = line.slice(line.indexOf(":") + 1).trim();
+      // Parse: "nervous - 78%" or "calm - 70%"
+      var match = content.match(/^([\w]+)\s*[-\u2013]\s*(\d+)%?/);
+      var label = match ? match[1].toLowerCase() : content.toLowerCase().replace(/[^a-z]/g, "");
+      var conf  = match ? parseInt(match[2], 10) : 70;
+      $emoIcon.textContent = emojiMap[label] || "\uD83D\uDE0C";
       $emoLabel.textContent = label;
       $emoLabel.style.color = colorMap[label] || "#f1f5f9";
       $emoConf.textContent = conf + "%";
@@ -501,15 +510,22 @@ function parseResponse(text){
       $emotionBadge.classList.add("visible");
       updateEmotionMeter(label, conf);
       exchange.emotion = label;
-    } else if(upper.startsWith("SUBTEXT:")){
-      var content = line.split(":",2)[1].trim();
-      var p = document.createElement("p");
-      p.textContent = content;
-      $transcriptText.appendChild(p);
-      $transcriptText.scrollTop = $transcriptText.scrollHeight;
+      exchange.emotionConf = conf;
+
+    } else if(lower.startsWith("subtext:")){
+      structuredFound = true;
+      var content = line.slice(line.indexOf(":") + 1).trim();
+      $subtextText.style.opacity = "0";
+      setTimeout(function(){
+        $subtextText.textContent = content;
+        $subtextText.className = "card-body slide-in";
+        $subtextText.style.opacity = "1";
+      }, 150);
       exchange.subtext = content;
-    } else if(upper.startsWith("SUGGEST:")){
-      var content = line.split(":",2)[1].trim();
+
+    } else if(lower.startsWith("suggest:")){
+      structuredFound = true;
+      var content = line.slice(line.indexOf(":") + 1).trim();
       $suggestionText.textContent = content;
       $suggestionText.className = "card-body slide-up";
       $suggestionCard.classList.remove("suggestion-glow");
@@ -518,6 +534,14 @@ function parseResponse(text){
       exchange.suggestion = content;
     }
   });
+
+  if(!structuredFound){
+    var p = document.createElement("p");
+    p.textContent = text.trim();
+    $transcriptText.appendChild(p);
+    $transcriptText.scrollTop = $transcriptText.scrollHeight;
+  }
+
   logToHistory(exchange);
 }
 
