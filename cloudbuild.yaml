@@ -1,0 +1,49 @@
+steps:
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${_PROJECT}/${_REPO}/app:${SHORT_SHA}'
+      - '.'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/${_PROJECT}/${_REPO}/app:${SHORT_SHA}'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/${_PROJECT}/${_REPO}/app:${SHORT_SHA}'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - '${_REGION}'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '5'
+      - '--port'
+      - '8080'
+      - '--set-env-vars'
+      - 'GOOGLE_CLOUD_PROJECT=${_PROJECT},GOOGLE_CLOUD_REGION=${_REGION}'
+
+substitutions:
+  _PROJECT: notional-cirrus-458606-e0
+  _REGION: us-central1
+  _SERVICE: tonelens
+  _REPO: tonelens-repo
+
+timeout: 1200s

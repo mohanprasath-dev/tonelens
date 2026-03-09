@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ToneLens</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080810;--surface:#111827;--surface2:#1f2937;
+  --primary:#6366f1;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --text:#f1f5f9;--text2:#94a3b8;--radius:12px;--transition:.3s ease;
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);overflow:hidden}
+
+/* ── Loading screen ────────────────────────────────────── */
+#loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:var(--bg);transition:opacity .6s ease}
+#loading.hidden{opacity:0;pointer-events:none}
+#loading h1{font-size:3rem;background:linear-gradient(135deg,var(--primary),#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}
+#loading .dots span{display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--primary);margin:0 4px;animation:bounce .6s infinite alternate}
+#loading .dots span:nth-child(2){animation-delay:.2s}
+#loading .dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{to{opacity:.3;transform:translateY(-6px)}}
+
+/* ── Header ────────────────────────────────────────────── */
+header{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--surface2)}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:700}
+.status-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);transition:background var(--transition)}
+.status-dot.connected{background:var(--success)}
+.status-dot.reconnecting{background:var(--warning);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.mode-btns{display:flex;gap:6px}
+.mode-btn{padding:6px 14px;border:1px solid var(--surface2);border-radius:20px;
+  background:transparent;color:var(--text2);cursor:pointer;font-size:.85rem;transition:all var(--transition)}
+.mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* ── Main layout ───────────────────────────────────────── */
+.main{display:flex;height:calc(100vh - 49px);overflow:hidden}
+.camera-panel{flex:0 0 50%;display:flex;flex-direction:column;padding:12px;gap:10px;position:relative}
+.analysis-panel{flex:1;display:flex;flex-direction:column;gap:10px;padding:12px;overflow-y:auto}
+
+/* ── Camera ────────────────────────────────────────────── */
+.camera-wrap{position:relative;flex:1;border-radius:var(--radius);overflow:hidden;
+  background:#000;border:2px solid transparent;transition:border-color var(--transition)}
+.camera-wrap.live{border-color:var(--primary);animation:borderPulse 2s infinite}
+@keyframes borderPulse{50%{border-color:rgba(99,102,241,.4)}}
+#video{width:100%;height:100%;object-fit:cover;display:block}
+canvas{display:none}
+.emotion-badge{position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+  font-size:.9rem;transition:all var(--transition);transform:scale(0);opacity:0}
+.emotion-badge.visible{transform:scale(1);opacity:1}
+.emotion-badge .emo-icon{font-size:1.3rem}
+.emotion-badge .emo-label{font-weight:600}
+.emotion-badge .emo-conf{color:var(--text2);font-size:.8rem}
+
+/* ── Mic area ──────────────────────────────────────────── */
+.mic-area{display:flex;align-items:center;gap:14px;padding:10px 14px;
+  background:var(--surface);border-radius:var(--radius)}
+.waveform{display:flex;align-items:flex-end;gap:3px;height:30px}
+.waveform .bar{width:4px;background:var(--primary);border-radius:2px;
+  transition:height .1s ease;min-height:4px}
+.mic-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  background:var(--primary);color:#fff;transition:all var(--transition);flex-shrink:0}
+.mic-btn.listening{background:var(--danger);animation:pulse 1s infinite}
+.mic-btn.processing{background:var(--primary);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mic-status{font-size:.8rem;color:var(--text2)}
+
+/* ── Analysis cards ────────────────────────────────────── */
+.card{background:var(--surface);border-radius:var(--radius);padding:16px;transition:all var(--transition)}
+.card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.85rem;
+  color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.card-body{font-size:1rem;line-height:1.5;min-height:24px}
+.lang-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.7rem;
+  background:var(--surface2);color:var(--text2);margin-bottom:6px}
+.suggestion-glow{animation:glow 2s ease}
+@keyframes glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(99,102,241,.5)}}
+.slide-in{animation:slideIn .3s ease forwards}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.slide-up{animation:slideUp .3s ease forwards}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Toast ─────────────────────────────────────────────── */
+#toast-container{position:fixed;top:16px;right:16px;z-index:10000;display:flex;
+  flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);background:var(--danger);color:#fff;
+  font-size:.9rem;opacity:0;transform:translateX(30px);transition:all .3s ease}
+.toast.show{opacity:1;transform:translateX(0)}
+
+/* ── Connection banner ─────────────────────────────────── */
+#conn-banner{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;
+  background:var(--danger);color:#fff;font-size:.85rem;z-index:9998;
+  transform:translateY(-100%);transition:transform .3s ease}
+#conn-banner.visible{transform:translateY(0)}
+
+/* ── Camera error ──────────────────────────────────────── */
+.camera-error{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:16px;color:var(--text2)}
+.camera-error .icon{font-size:3rem}
+.camera-error p{text-align:center;max-width:260px}
+.retry-btn{padding:8px 24px;border-radius:20px;border:none;background:var(--primary);
+  color:#fff;cursor:pointer;font-size:.9rem}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media(max-width:768px){
+  .main{flex-direction:column}
+  .camera-panel{flex:0 0 auto;max-height:45vh}
+  .analysis-panel{flex:1;overflow-y:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading">
+  <h1>ToneLens</h1>
+  <p style="color:var(--text2);margin-bottom:16px">Initializing agent...</p>
+  <div class="dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- Connection banner -->
+<div id="conn-banner"></div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <span class="status-dot" id="statusDot"></span>
+    <span>ToneLens</span>
+  </div>
+  <div class="mode-btns">
+    <button class="mode-btn active" data-mode="travel">&#127757; Travel</button>
+    <button class="mode-btn" data-mode="meeting">&#128188; Meeting</button>
+    <button class="mode-btn" data-mode="present">&#127908; Present</button>
+  </div>
+</header>
+
+<!-- Main layout -->
+<div class="main">
+  <!-- Left: camera + mic -->
+  <div class="camera-panel">
+    <div class="camera-wrap" id="cameraWrap">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div class="emotion-badge" id="emotionBadge">
+        <span class="emo-icon" id="emoIcon">&#128524;</span>
+        <span class="emo-label" id="emoLabel">calm</span>
+        <span class="emo-conf" id="emoConf">70%</span>
+      </div>
+      <!-- Camera error (hidden by default) -->
+      <div class="camera-error" id="cameraError" style="display:none">
+        <div class="icon">&#128247;</div>
+        <p>Enable camera access to use ToneLens</p>
+        <button class="retry-btn" id="retryCamera">Retry</button>
+      </div>
+    </div>
+
+    <div class="mic-area">
+      <div class="waveform" id="waveform">
+        <div class="bar" style="height:4px"></div>
+        <div class="bar" style="height:4px"></div>
+        <div class="bar" style="height:4px"></div>
+        <div class="bar" style="height:4px"></div>
+        <div class="bar" style="height:4px"></div>
+      </div>
+      <button class="mic-btn" id="micBtn">&#127908;</button>
+      <span class="mic-status" id="micStatus">Ready</span>
+    </div>
+  </div>
+
+  <!-- Right: analysis panels -->
+  <div class="analysis-panel">
+    <div class="card" id="translationCard">
+      <div class="card-header">&#127760; Translation</div>
+      <div class="lang-badge" id="langBadge" style="display:none"></div>
+      <div class="card-body" id="translationText">Waiting for speech...</div>
+    </div>
+    <div class="card" id="subtextCard">
+      <div class="card-header">&#129504; Emotional Context</div>
+      <div class="card-body" id="subtextText">Insight will appear here...</div>
+    </div>
+    <div class="card" id="suggestionCard">
+      <div class="card-header">&#128161; Suggestion</div>
+      <div class="card-body" id="suggestionText">Suggestion will appear here...</div>
+    </div>
+    <div class="card" id="transcriptCard">
+      <div class="card-header">&#128196; Transcript</div>
+      <div class="card-body" id="transcriptText" style="max-height:120px;overflow-y:auto;font-size:.85rem;color:var(--text2)"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ── State ─────────────────────────────────────────────── */
+const sessionId = crypto.randomUUID();
+let ws = null;
+let currentMode = "travel";
+let isListening = false;
+let audioCtx = null;
+let micStream = null;
+let processor = null;
+let analyser = null;
+let videoStream = null;
+let frameInterval = null;
+let reconnectTimer = null;
+let reconnectCountdown = 3;
+let noAudioTimer = null;
+let playbackCtx = null;
+let nextPlayTime = 0;
+
+/* ── DOM refs ──────────────────────────────────────────── */
+const $loading       = document.getElementById("loading");
+const $statusDot     = document.getElementById("statusDot");
+const $video         = document.getElementById("video");
+const $canvas        = document.getElementById("canvas");
+const $cameraWrap    = document.getElementById("cameraWrap");
+const $cameraError   = document.getElementById("cameraError");
+const $retryCamera   = document.getElementById("retryCamera");
+const $micBtn        = document.getElementById("micBtn");
+const $micStatus     = document.getElementById("micStatus");
+const $waveform      = document.getElementById("waveform");
+const $emotionBadge  = document.getElementById("emotionBadge");
+const $emoIcon       = document.getElementById("emoIcon");
+const $emoLabel      = document.getElementById("emoLabel");
+const $emoConf       = document.getElementById("emoConf");
+const $translationText = document.getElementById("translationText");
+const $langBadge     = document.getElementById("langBadge");
+const $subtextText   = document.getElementById("subtextText");
+const $suggestionText= document.getElementById("suggestionText");
+const $suggestionCard= document.getElementById("suggestionCard");
+const $transcriptText= document.getElementById("transcriptText");
+const $connBanner    = document.getElementById("conn-banner");
+const bars           = $waveform.querySelectorAll(".bar");
+
+const emojiMap = {
+  nervous:"😰", confident:"💪", frustrated:"😤", happy:"😊",
+  uncertain:"🤔", deceptive:"⚡", calm:"😌", excited:"🚀"
+};
+const colorMap = {
+  nervous:"#f59e0b", confident:"#10b981", frustrated:"#ef4444", happy:"#10b981",
+  uncertain:"#6366f1", deceptive:"#ef4444", calm:"#10b981", excited:"#6366f1"
+};
+
+/* ── WebSocket ─────────────────────────────────────────── */
+function wsUrl(){
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  const host = location.hostname === "localhost"
+    ? "localhost:8080"
+    : location.host;
+  return proto + "//" + host + "/ws/" + sessionId;
+}
+
+function connectWS(){
+  if(ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+  setStatus("reconnecting");
+  ws = new WebSocket(wsUrl());
+
+  ws.onopen = function(){
+    setStatus("connected");
+    hideBanner();
+    clearInterval(reconnectTimer);
+    reconnectTimer = null;
+    ws.send(JSON.stringify({type:"mode",mode:currentMode}));
+    hideLoading();
+  };
+
+  ws.onmessage = function(ev){
+    try{ handleMessage(JSON.parse(ev.data)); }
+    catch(e){ console.warn("Bad WS message",e); }
+  };
+
+  ws.onclose = function(){
+    setStatus("disconnected");
+    scheduleReconnect();
+  };
+
+  ws.onerror = function(){
+    setStatus("disconnected");
+  };
+}
+
+function send(obj){
+  if(ws && ws.readyState === WebSocket.OPEN){
+    ws.send(JSON.stringify(obj));
+  }
+}
+
+function scheduleReconnect(){
+  if(reconnectTimer) return;
+  reconnectCountdown = 3;
+  showBanner("Connection lost. Reconnecting in " + reconnectCountdown + "s...");
+  reconnectTimer = setInterval(function(){
+    reconnectCountdown--;
+    if(reconnectCountdown <= 0){
+      clearInterval(reconnectTimer);
+      reconnectTimer = null;
+      hideBanner();
+      connectWS();
+    } else {
+      showBanner("Connection lost. Reconnecting in " + reconnectCountdown + "s...");
+    }
+  }, 1000);
+}
+
+function setStatus(s){
+  $statusDot.className = "status-dot " + (s === "connected" ? "connected" : s === "reconnecting" ? "reconnecting" : "");
+}
+
+function showBanner(msg){ $connBanner.textContent = msg; $connBanner.classList.add("visible"); }
+function hideBanner(){ $connBanner.classList.remove("visible"); }
+
+/* ── Message handlers ──────────────────────────────────── */
+function handleMessage(msg){
+  switch(msg.type){
+    case "translation": onTranslation(msg); break;
+    case "emotion":     onEmotion(msg);     break;
+    case "subtext":     onSubtext(msg);     break;
+    case "suggestion":  onSuggestion(msg);  break;
+    case "transcript":  onTranscript(msg);  break;
+    case "audio":       onAudio(msg);       break;
+    case "text":        parseResponse(msg.text || ""); break;
+    case "error":       showToast(msg.msg || "Unknown error"); break;
+  }
+}
+
+/* Structured response parser */
+function parseResponse(text){
+  if(!text) return;
+  var lines = text.split("\n");
+  lines.forEach(function(line){
+    line = line.trim();
+    var upper = line.toUpperCase();
+    if(upper.startsWith("TRANSLATION:")){
+      var content = line.split(":",2)[1].trim();
+      typeText($translationText, content);
+    } else if(upper.startsWith("EMOTION:")){
+      var content = line.split(":",2)[1].trim();
+      var dash = content.lastIndexOf("-");
+      var label = (dash > -1 ? content.substring(0, dash) : content).trim().toLowerCase();
+      var pct   = dash > -1 ? content.substring(dash+1).trim() : "70%";
+      var conf  = parseInt(pct) || 70;
+      $emoIcon.textContent = emojiMap[label] || "😌";
+      $emoLabel.textContent = label;
+      $emoLabel.style.color = colorMap[label] || "#f1f5f9";
+      $emoConf.textContent = conf + "%";
+      $emotionBadge.classList.remove("visible");
+      void $emotionBadge.offsetWidth;
+      $emotionBadge.classList.add("visible");
+    } else if(upper.startsWith("SUBTEXT:")){
+      var content = line.split(":",2)[1].trim();
+      var p = document.createElement("p");
+      p.textContent = content;
+      $transcriptText.appendChild(p);
+      $transcriptText.scrollTop = $transcriptText.scrollHeight;
+    } else if(upper.startsWith("SUGGEST:")){
+      var content = line.split(":",2)[1].trim();
+      $suggestionText.textContent = content;
+      $suggestionText.className = "card-body slide-up";
+      $suggestionCard.classList.remove("suggestion-glow");
+      void $suggestionCard.offsetWidth;
+      $suggestionCard.classList.add("suggestion-glow");
+    }
+  });
+}
+
+/* Typing effect */
+let typeTimer = null;
+function typeText(el, text, speed){
+  speed = speed || 30;
+  if(typeTimer) clearInterval(typeTimer);
+  el.textContent = "";
+  let i = 0;
+  typeTimer = setInterval(function(){
+    if(i >= text.length){ clearInterval(typeTimer); typeTimer = null; return; }
+    el.textContent += text[i++];
+  }, speed);
+}
+
+function onTranslation(msg){
+  var badge = $langBadge;
+  if(msg.source_language && msg.source_language !== "Unknown"){
+    badge.textContent = msg.source_language;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+  typeText($translationText, msg.text || "");
+}
+
+function onEmotion(msg){
+  var label = msg.label || "calm";
+  var conf = Math.round((msg.confidence || 0.7) * 100);
+  $emoIcon.textContent = emojiMap[label] || "😌";
+  $emoLabel.textContent = label;
+  $emoLabel.style.color = colorMap[label] || "#f1f5f9";
+  $emoConf.textContent = conf + "%";
+  $emotionBadge.classList.remove("visible");
+  void $emotionBadge.offsetWidth;
+  $emotionBadge.classList.add("visible");
+}
+
+function onSubtext(msg){
+  $subtextText.style.opacity = "0";
+  setTimeout(function(){
+    $subtextText.textContent = msg.text || "";
+    $subtextText.className = "card-body slide-in";
+    $subtextText.style.opacity = "1";
+  }, 200);
+}
+
+function onSuggestion(msg){
+  $suggestionText.textContent = msg.text || "";
+  $suggestionText.className = "card-body slide-up";
+  $suggestionCard.classList.remove("suggestion-glow");
+  void $suggestionCard.offsetWidth;
+  $suggestionCard.classList.add("suggestion-glow");
+}
+
+function onTranscript(msg){
+  if(!msg.text) return;
+  var p = document.createElement("p");
+  p.textContent = msg.text;
+  $transcriptText.appendChild(p);
+  $transcriptText.scrollTop = $transcriptText.scrollHeight;
+}
+
+function onAudio(msg){
+  if(!msg.data) return;
+  try{
+    if(!playbackCtx) playbackCtx = new AudioContext({sampleRate:24000});
+    var raw = atob(msg.data);
+    var bytes = new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) bytes[i] = raw.charCodeAt(i);
+    var int16 = new Int16Array(bytes.buffer);
+    var float32 = new Float32Array(int16.length);
+    for(var j=0;j<int16.length;j++) float32[j] = int16[j] / 32768.0;
+    var buf = playbackCtx.createBuffer(1, float32.length, 24000);
+    buf.copyToChannel(float32, 0);
+    var src = playbackCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(playbackCtx.destination);
+    var now = playbackCtx.currentTime;
+    if(nextPlayTime < now) nextPlayTime = now;
+    src.start(nextPlayTime);
+    nextPlayTime += buf.duration;
+  } catch(e){ console.warn("Audio playback error", e); }
+}
+
+/* ── Toast ─────────────────────────────────────────────── */
+function showToast(message){
+  var t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = message;
+  document.getElementById("toast-container").appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  setTimeout(function(){
+    t.classList.remove("show");
+    setTimeout(function(){ t.remove(); }, 300);
+  }, 4000);
+}
+
+/* ── Camera ────────────────────────────────────────────── */
+async function startCamera(){
+  try{
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment",width:{ideal:640},height:{ideal:480}},
+      audio:false
+    });
+    $video.srcObject = videoStream;
+    $video.style.display = "block";
+    $cameraError.style.display = "none";
+    $cameraWrap.classList.add("live");
+    startFrameCapture();
+  } catch(e){
+    console.error("Camera error:", e);
+    $video.style.display = "none";
+    $cameraError.style.display = "flex";
+  }
+}
+
+function startFrameCapture(){
+  var ctx = $canvas.getContext("2d");
+  $canvas.width = 640;
+  $canvas.height = 480;
+  frameInterval = setInterval(function(){
+    if(!videoStream || !ws || ws.readyState !== WebSocket.OPEN) return;
+    ctx.drawImage($video, 0, 0, 640, 480);
+    var dataUrl = $canvas.toDataURL("image/jpeg", 0.7);
+    var b64 = dataUrl.split(",")[1];
+    send({type:"frame", data:b64});
+  }, 2000);
+}
+
+$retryCamera.addEventListener("click", startCamera);
+
+/* ── Audio capture ─────────────────────────────────────── */
+async function startAudio(){
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:16000});
+    var actualRate = audioCtx.sampleRate;
+    var source = audioCtx.createMediaStreamSource(micStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 32;
+    source.connect(analyser);
+    processor = audioCtx.createScriptProcessor(4096, 1, 1);
+    analyser.connect(processor);
+    processor.connect(audioCtx.destination);
+    isListening = true;
+    $micBtn.classList.add("listening");
+    $micStatus.textContent = "Listening...";
+    resetNoAudioTimer();
+
+    processor.onaudioprocess = function(e){
+      if(!isListening) return;
+      var float32 = e.inputBuffer.getChannelData(0);
+      var samples = float32;
+      if(actualRate !== 16000){
+        samples = downsample(float32, actualRate, 16000);
+      }
+      var int16 = new Int16Array(samples.length);
+      for(var i=0;i<samples.length;i++){
+        var s = Math.max(-1, Math.min(1, samples[i]));
+        int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+      var b64 = arrayBufferToBase64(int16.buffer);
+      send({type:"audio", data:b64});
+      resetNoAudioTimer();
+    };
+    updateWaveform();
+  } catch(e){
+    console.error("Mic error:", e);
+    $micStatus.textContent = "Mic unavailable";
+  }
+}
+
+function downsample(buffer, fromRate, toRate){
+  var ratio = fromRate / toRate;
+  var newLen = Math.round(buffer.length / ratio);
+  var result = new Float32Array(newLen);
+  for(var i=0;i<newLen;i++){
+    result[i] = buffer[Math.round(i * ratio)];
+  }
+  return result;
+}
+
+function arrayBufferToBase64(buf){
+  var bytes = new Uint8Array(buf);
+  var binary = "";
+  for(var i=0;i<bytes.length;i++){
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function stopAudio(){
+  isListening = false;
+  if(processor){ processor.disconnect(); processor = null; }
+  if(audioCtx){ audioCtx.close().catch(function(){}); audioCtx = null; }
+  if(micStream){ micStream.getTracks().forEach(function(t){t.stop();}); micStream = null; }
+  $micBtn.classList.remove("listening");
+  $micStatus.textContent = "Ready";
+  bars.forEach(function(b){ b.style.height = "4px"; });
+}
+
+$micBtn.addEventListener("click", function(){
+  if(isListening){ stopAudio(); }
+  else { startAudio(); }
+});
+
+function updateWaveform(){
+  if(!analyser || !isListening) return;
+  var data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  for(var i=0;i<bars.length;i++){
+    var v = data[i * 3] || 0;
+    bars[i].style.height = Math.max(4, v / 255 * 30) + "px";
+  }
+  requestAnimationFrame(updateWaveform);
+}
+
+function resetNoAudioTimer(){
+  clearTimeout(noAudioTimer);
+  $micBtn.style.boxShadow = "none";
+  noAudioTimer = setTimeout(function(){
+    if(isListening) $micBtn.style.boxShadow = "0 0 0 4px rgba(99,102,241,.5)";
+  }, 15000);
+}
+
+/* ── Mode buttons ──────────────────────────────────────── */
+document.querySelectorAll(".mode-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    document.querySelectorAll(".mode-btn").forEach(function(b){b.classList.remove("active");});
+    btn.classList.add("active");
+    currentMode = btn.dataset.mode;
+    send({type:"mode", mode:currentMode});
+  });
+});
+
+/* ── Loading ───────────────────────────────────────────── */
+function hideLoading(){
+  $loading.classList.add("hidden");
+  setTimeout(function(){ $loading.style.display = "none"; }, 600);
+}
+
+/* ── Init ──────────────────────────────────────────────── */
+async function init(){
+  connectWS();
+  await startCamera();
+  await startAudio();
+}
+
+init();
+
+})();
+</script>
+</body>
+</html>

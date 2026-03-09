@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+google-genai
+google-adk
+google-cloud-firestore
+python-dotenv
+websockets
+python-multipart
+aiofiles
+pydantic
