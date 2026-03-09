@@ -100,6 +100,20 @@ canvas{display:none}
   transform:translateY(-100%);transition:transform .3s ease}
 #conn-banner.visible{transform:translateY(0)}
 
+/* ── Consent banner ─────────────────────────────────────── */
+#consent-banner{display:none;align-items:center;justify-content:center;gap:12px;
+  padding:8px 16px;background:#92400e;color:#fef3c7;font-size:.85rem;
+  border-bottom:1px solid #b45309}
+#consent-banner.visible{display:flex}
+#consent-banner button{background:none;border:none;color:#fef3c7;font-size:1.1rem;
+  cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+
+/* ── Speaker icon ────────────────────────────────────────── */
+.speaker-wrap{display:flex;align-items:center;margin-left:12px}
+.speaker-icon{font-size:1.2rem;transition:all var(--transition);cursor:default}
+.speaker-icon.speaking{animation:speakerPulse .5s infinite alternate}
+@keyframes speakerPulse{from{opacity:1;transform:scale(1)}to{opacity:.4;transform:scale(1.2)}}
+
 /* ── Camera error ──────────────────────────────────────── */
 .camera-error{display:flex;flex-direction:column;align-items:center;justify-content:center;
   height:100%;gap:16px;color:var(--text2)}
@@ -128,6 +142,12 @@ canvas{display:none}
 <!-- Connection banner -->
 <div id="conn-banner"></div>
 
+<!-- Consent banner (meeting mode) -->
+<div id="consent-banner">
+  <span>&#128308; ToneLens Active &mdash; All parties should be aware tone analysis is running</span>
+  <button id="dismissConsent" title="Dismiss">&times;</button>
+</div>
+
 <!-- Toast container -->
 <div id="toast-container"></div>
 
@@ -141,6 +161,9 @@ canvas{display:none}
     <button class="mode-btn active" data-mode="travel">&#127757; Travel</button>
     <button class="mode-btn" data-mode="meeting">&#128188; Meeting</button>
     <button class="mode-btn" data-mode="present">&#127908; Present</button>
+  </div>
+  <div class="speaker-wrap">
+    <span class="speaker-icon" id="speakerIcon">&#128264;</span>
   </div>
 </header>
 
@@ -219,6 +242,8 @@ let reconnectCountdown = 3;
 let noAudioTimer = null;
 let playbackCtx = null;
 let nextPlayTime = 0;
+let screenStream = null;
+let speakerTimer = null;
 
 /* ── DOM refs ──────────────────────────────────────────── */
 const $loading       = document.getElementById("loading");
@@ -242,7 +267,13 @@ const $suggestionText= document.getElementById("suggestionText");
 const $suggestionCard= document.getElementById("suggestionCard");
 const $transcriptText= document.getElementById("transcriptText");
 const $connBanner    = document.getElementById("conn-banner");
+const $consentBanner = document.getElementById("consent-banner");
+const $speakerIcon   = document.getElementById("speakerIcon");
 const bars           = $waveform.querySelectorAll(".bar");
+
+document.getElementById("dismissConsent").addEventListener("click", function(){
+  $consentBanner.classList.remove("visible");
+});
 
 const emojiMap = {
   nervous:"😰", confident:"💪", frustrated:"😤", happy:"😊",
@@ -440,6 +471,8 @@ function onAudio(msg){
   if(!msg.data) return;
   try{
     if(!playbackCtx) playbackCtx = new AudioContext({sampleRate:24000});
+    // Resume if suspended by browser autoplay policy
+    if(playbackCtx.state === "suspended") playbackCtx.resume();
     var raw = atob(msg.data);
     var bytes = new Uint8Array(raw.length);
     for(var i=0;i<raw.length;i++) bytes[i] = raw.charCodeAt(i);
@@ -455,6 +488,14 @@ function onAudio(msg){
     if(nextPlayTime < now) nextPlayTime = now;
     src.start(nextPlayTime);
     nextPlayTime += buf.duration;
+    // Animate speaker icon while audio plays
+    $speakerIcon.textContent = "\uD83D\uDD0A";
+    $speakerIcon.classList.add("speaking");
+    clearTimeout(speakerTimer);
+    speakerTimer = setTimeout(function(){
+      $speakerIcon.classList.remove("speaking");
+      $speakerIcon.textContent = "\uD83D\uDD08";
+    }, Math.max(500, buf.duration * 1000 + 300));
   } catch(e){ console.warn("Audio playback error", e); }
 }
 
@@ -490,7 +531,40 @@ async function startCamera(){
   }
 }
 
+async function startScreenCapture(){
+  try{
+    screenStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
+    // Stop existing camera/video
+    if(videoStream){ videoStream.getTracks().forEach(function(t){t.stop();}); videoStream = null; }
+    videoStream = screenStream;
+    $video.srcObject = screenStream;
+    $video.style.display = "block";
+    $cameraError.style.display = "none";
+    $cameraWrap.classList.add("live");
+    startFrameCapture();
+    // Pipe screen audio to Gemini if available
+    var audioTracks = screenStream.getAudioTracks();
+    if(audioTracks.length > 0){
+      stopAudio();
+      startAudioFromStream(screenStream);
+    }
+    // Show consent banner
+    $consentBanner.classList.add("visible");
+    // Handle user stopping screen share via browser UI
+    screenStream.getVideoTracks()[0].addEventListener("ended", function(){
+      $consentBanner.classList.remove("visible");
+      screenStream = null;
+      videoStream = null;
+      startCamera();
+    });
+  } catch(e){
+    console.error("Screen capture error:", e);
+    showToast("Screen capture cancelled or unavailable");
+  }
+}
+
 function startFrameCapture(){
+  if(frameInterval) clearInterval(frameInterval);
   var ctx = $canvas.getContext("2d");
   $canvas.width = 640;
   $canvas.height = 480;
@@ -506,6 +580,39 @@ function startFrameCapture(){
 $retryCamera.addEventListener("click", startCamera);
 
 /* ── Audio capture ─────────────────────────────────────── */
+function startAudioFromStream(stream){
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:16000});
+    var actualRate = audioCtx.sampleRate;
+    var source = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 32;
+    source.connect(analyser);
+    processor = audioCtx.createScriptProcessor(4096, 1, 1);
+    analyser.connect(processor);
+    processor.connect(audioCtx.destination);
+    isListening = true;
+    $micBtn.classList.add("listening");
+    $micStatus.textContent = "Screen audio...";
+    resetNoAudioTimer();
+    processor.onaudioprocess = function(e){
+      if(!isListening) return;
+      var float32 = e.inputBuffer.getChannelData(0);
+      var samples = (actualRate !== 16000) ? downsample(float32, actualRate, 16000) : float32;
+      var int16 = new Int16Array(samples.length);
+      for(var i=0;i<samples.length;i++){
+        var s = Math.max(-1, Math.min(1, samples[i]));
+        int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+      send({type:"audio", data:arrayBufferToBase64(int16.buffer)});
+      resetNoAudioTimer();
+    };
+    updateWaveform();
+  } catch(e){
+    console.error("Stream audio error:", e);
+  }
+}
+
 async function startAudio(){
   try{
     micStream = await navigator.mediaDevices.getUserMedia({audio:true});
@@ -601,11 +708,29 @@ function resetNoAudioTimer(){
 
 /* ── Mode buttons ──────────────────────────────────────── */
 document.querySelectorAll(".mode-btn").forEach(function(btn){
-  btn.addEventListener("click", function(){
+  btn.addEventListener("click", async function(){
+    var newMode = btn.dataset.mode;
+    if(newMode === currentMode) return;
     document.querySelectorAll(".mode-btn").forEach(function(b){b.classList.remove("active");});
     btn.classList.add("active");
-    currentMode = btn.dataset.mode;
+    currentMode = newMode;
     send({type:"mode", mode:currentMode});
+    if(newMode === "meeting"){
+      // Switch to screen + system audio capture
+      if(frameInterval){ clearInterval(frameInterval); frameInterval = null; }
+      if(videoStream){ videoStream.getTracks().forEach(function(t){t.stop();}); videoStream = null; }
+      stopAudio();
+      await startScreenCapture();
+    } else {
+      // Leaving meeting mode — restore camera + mic
+      $consentBanner.classList.remove("visible");
+      if(screenStream){ screenStream.getTracks().forEach(function(t){t.stop();}); screenStream = null; }
+      if(frameInterval){ clearInterval(frameInterval); frameInterval = null; }
+      if(videoStream){ videoStream.getTracks().forEach(function(t){t.stop();}); videoStream = null; }
+      stopAudio();
+      await startCamera();
+      await startAudio();
+    }
   });
 });
 
