@@ -3,294 +3,421 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ToneLens</title>
+<title>ToneLens — App</title>
+<meta name="description" content="Google Translate tells you the words. ToneLens tells you the truth."/>
+<meta property="og:title" content="ToneLens — Real-time Emotional Intelligence"/>
+<meta property="og:description" content="Google Translate tells you the words. ToneLens tells you the truth."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' fill='%23000'><rect width='1200' height='630'/><text x='600' y='315' text-anchor='middle' fill='%2300ff41' font-size='80' font-family='monospace'>ToneLens</text></svg>"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%2300ff41'/></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::selection{background:#00ff41;color:#000}
 :root{
-  --bg:#080810;--surface:#111827;--surface2:#1f2937;
-  --primary:#6366f1;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;
-  --text:#f1f5f9;--text2:#94a3b8;--radius:12px;--transition:.3s ease;
+  --bg:#000;--surface:#0a0a0a;--border:#1a1a1a;
+  --green:#00ff41;--green2:#00cc33;--dim:#003311;
+  --green-glow:0 0 20px rgba(0,255,65,0.3);
+  --text:#fff;--text2:#888;--text3:#444;
+  --danger:#ff3333;--warning:#ffaa00;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'Inter',sans-serif;
+  --radius:8px;
+  --transition:.25s cubic-bezier(.4,0,.2,1);
 }
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  background:var(--bg);color:var(--text);overflow:hidden}
+html,body{height:100%;font-family:var(--font-body);background:var(--bg);color:var(--text);
+  overflow:hidden;-webkit-font-smoothing:antialiased;cursor:default}
+a{color:var(--green);text-decoration:none;cursor:pointer}
 
-/* ── Loading ──────────────────────────────────────────── */
-#loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;background:var(--bg);transition:opacity .6s ease}
-#loading.hidden{opacity:0;pointer-events:none}
-#loading h1{font-size:3rem;background:linear-gradient(135deg,var(--primary),#a78bfa);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}
-#loading .dots span{display:inline-block;width:8px;height:8px;border-radius:50%;
-  background:var(--primary);margin:0 4px;animation:bounce .6s infinite alternate}
-#loading .dots span:nth-child(2){animation-delay:.2s}
-#loading .dots span:nth-child(3){animation-delay:.4s}
-@keyframes bounce{to{opacity:.3;transform:translateY(-6px)}}
+/* Scanline */
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,0.015) 2px,rgba(0,255,65,0.015) 4px)}
 
 /* ── Header ───────────────────────────────────────────── */
-header{display:flex;align-items:center;justify-content:space-between;
-  padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--surface2)}
-.logo{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:700}
-.status-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);transition:background var(--transition)}
-.status-dot.connected{background:var(--success)}
-.status-dot.reconnecting{background:var(--warning);animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.4}}
-.mode-btns{display:flex;gap:6px}
-.mode-btn{padding:6px 14px;border:1px solid var(--surface2);border-radius:20px;
-  background:transparent;color:var(--text2);cursor:pointer;font-size:.85rem;transition:all var(--transition)}
-.mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);position:relative;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px}
+.home-link{font-family:var(--font-mono);font-size:.75rem;color:var(--text3);
+  transition:color var(--transition)}
+.home-link:hover{color:var(--green);text-decoration:none}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);
+  font-size:1rem;font-weight:700;color:var(--green)}
+.logo-cursor{display:inline-block;width:8px;height:14px;background:var(--green);
+  animation:blink .8s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.header-center{display:flex;gap:4px}
+.mode-btn{font-family:var(--font-mono);padding:5px 12px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;font-size:.75rem;font-weight:500;
+  transition:all var(--transition)}
+.mode-btn:hover{border-color:rgba(0,255,65,0.3);color:var(--text2)}
+.mode-btn.active{border-color:var(--green);color:var(--green);background:var(--dim);
+  box-shadow:var(--green-glow)}
+.header-right{display:flex;align-items:center;gap:10px}
+.conn-status{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);
+  font-size:.72rem;color:var(--text3)}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);transition:all var(--transition)}
+.conn-dot.connected{background:var(--green);box-shadow:0 0 8px rgba(0,255,65,0.5);
+  animation:pulse 2s infinite}
+.conn-dot.reconnecting{background:var(--warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.icon-btn{width:30px;height:30px;border:1px solid var(--border);background:transparent;
+  color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;transition:all var(--transition)}
+.icon-btn:hover{border-color:rgba(0,255,65,0.3);color:var(--green)}
+.speaker-icon{font-size:.9rem;cursor:default;color:var(--text3);transition:all var(--transition)}
+.speaker-icon.speaking{color:var(--green);animation:speakPulse .5s infinite alternate}
+@keyframes speakPulse{from{opacity:1;transform:scale(1)}to{opacity:.4;transform:scale(1.15)}}
+#mock-test-btn{display:none;font-family:var(--font-mono);padding:5px 12px;
+  border:1px solid var(--border);background:transparent;color:var(--warning);
+  cursor:pointer;font-size:.72rem;font-weight:500;transition:all var(--transition)}
+#mock-test-btn:hover{border-color:var(--warning);background:rgba(255,170,0,0.08)}
+#mock-test-btn.running{pointer-events:none;opacity:.5}
 
 /* ── Main layout ──────────────────────────────────────── */
-.main{display:flex;height:calc(100vh - 49px);overflow:hidden}
-.camera-panel{flex:0 0 50%;display:flex;flex-direction:column;padding:12px;gap:10px;position:relative}
-.analysis-panel{flex:1;display:flex;flex-direction:column;gap:10px;padding:12px;overflow-y:auto}
+.main{display:flex;height:calc(100vh - 41px);overflow:hidden}
 
-/* ── Camera ───────────────────────────────────────────── */
-.camera-wrap{position:relative;flex:1;border-radius:var(--radius);overflow:hidden;
-  background:#000;border:2px solid transparent;transition:border-color var(--transition)}
-.camera-wrap.live{border-color:var(--primary);animation:borderPulse 2s infinite}
-.camera-wrap.emergency{border-color:var(--danger) !important;animation:emergencyFlash .5s infinite !important}
-@keyframes borderPulse{50%{border-color:rgba(99,102,241,.4)}}
-@keyframes emergencyFlash{0%,100%{border-color:var(--danger);box-shadow:0 0 20px rgba(239,68,68,.8)}50%{border-color:#ff6b6b;box-shadow:0 0 40px rgba(239,68,68,.4)}}
+/* ── Sidebars ─────────────────────────────────────────── */
+.sidebar{width:0;overflow:hidden;transition:width .3s ease;flex-shrink:0;
+  background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);
+  border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar.open{width:260px}
+.sidebar-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:.78rem;color:var(--green);
+  font-weight:600;white-space:nowrap;flex-shrink:0}
+.sidebar-hdr button{background:none;border:none;color:var(--text3);font-size:1rem;
+  cursor:pointer;padding:2px 6px;transition:color var(--transition)}
+.sidebar-hdr button:hover{color:var(--green)}
+.sidebar-list{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+.sidebar-list::-webkit-scrollbar{width:3px}
+.sidebar-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* History cards */
+.history-card{background:var(--surface);border:1px solid var(--border);padding:10px;
+  font-size:.78rem;line-height:1.5;transition:all var(--transition);
+  animation:slideUp .3s ease forwards}
+.history-card:hover{border-color:rgba(0,255,65,0.2)}
+.hc-time{color:var(--green);font-family:var(--font-mono);font-size:.7rem;margin-bottom:3px}
+.hc-emotion{font-weight:600;margin-bottom:2px}
+.hc-subtext{color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-empty{color:var(--text3);font-family:var(--font-mono);font-size:.78rem;padding:16px 8px;
+  font-style:normal}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Meeting notes */
+.meeting-note-item{background:var(--surface);border:1px solid var(--border);padding:10px;
+  font-size:.8rem;line-height:1.4;border-left:2px solid var(--green);
+  animation:slideUp .3s ease forwards}
+.mn-time{color:var(--green);font-family:var(--font-mono);font-size:.7rem;margin-bottom:4px}
+.mn-emotion{display:inline-block;padding:1px 6px;font-size:.68rem;
+  background:var(--dim);color:var(--green);font-family:var(--font-mono);margin-bottom:4px}
+.mn-text{color:var(--text)}
+.export-btn{margin:8px;padding:8px;border:1px solid var(--border);background:transparent;
+  color:var(--text3);cursor:pointer;font-size:.78rem;font-family:var(--font-mono);
+  transition:all var(--transition);text-align:center}
+.export-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* ── Camera + Mic panel ───────────────────────────────── */
+.camera-panel{flex:0 0 50%;display:flex;flex-direction:column;padding:10px;gap:8px}
+.analysis-panel{flex:1;display:flex;flex-direction:column;gap:8px;padding:10px;overflow-y:auto}
+.analysis-panel::-webkit-scrollbar{width:4px}
+.analysis-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.camera-wrap{position:relative;flex:1;overflow:hidden;background:#000;
+  border:1px solid var(--border);transition:all var(--transition)}
+.camera-wrap.live{border-color:var(--green);box-shadow:0 0 24px rgba(0,255,65,0.15)}
+.camera-wrap.emergency{border-color:var(--danger)!important;animation:emergFlash .5s infinite!important}
+@keyframes emergFlash{0%,100%{border-color:var(--danger);box-shadow:0 0 30px rgba(255,51,51,.5)}
+  50%{border-color:#ff6b6b;box-shadow:0 0 50px rgba(255,51,51,.2)}}
 #video{width:100%;height:100%;object-fit:cover;display:block}
-canvas{display:none}
-.emotion-badge{position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:8px;
-  padding:8px 14px;border-radius:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
-  font-size:.9rem;transition:all var(--transition);transform:scale(0);opacity:0}
+canvas#canvas{display:none}
+
+/* Emotion badge */
+.emotion-badge{position:absolute;bottom:10px;left:10px;display:flex;align-items:center;gap:6px;
+  padding:6px 14px;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);
+  border:1px solid var(--border);font-size:.82rem;transition:all var(--transition);
+  transform:scale(0);opacity:0;font-family:var(--font-mono)}
 .emotion-badge.visible{transform:scale(1);opacity:1}
-.emotion-badge .emo-icon{font-size:1.3rem}
-.emotion-badge .emo-label{font-weight:600}
-.emotion-badge .emo-conf{color:var(--text2);font-size:.8rem}
+.emotion-badge .emo-icon{font-size:1.1rem}
+.emotion-badge .emo-label{font-weight:600;color:var(--green)}
+.emotion-badge .emo-conf{color:var(--text3);font-size:.72rem}
 
-/* ── Mic ──────────────────────────────────────────────── */
-.mic-area{display:flex;align-items:center;gap:14px;padding:10px 14px;
-  background:var(--surface);border-radius:var(--radius)}
-.waveform{display:flex;align-items:flex-end;gap:3px;height:30px}
-.waveform .bar{width:4px;background:var(--primary);border-radius:2px;
-  transition:height .1s ease;min-height:4px}
-.mic-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
-  background:var(--primary);color:#fff;transition:all var(--transition);flex-shrink:0}
-.mic-btn.listening{background:var(--danger);animation:pulse 1s infinite}
-.mic-btn.processing{background:var(--primary);animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.mic-status{font-size:.8rem;color:var(--text2)}
+/* Camera error */
+.camera-error{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:14px;color:var(--text3)}
+.camera-error .icon{font-size:2.5rem}
+.camera-error p{text-align:center;max-width:240px;font-size:.85rem}
+.retry-btn{font-family:var(--font-mono);padding:8px 20px;border:1px solid var(--green);
+  background:transparent;color:var(--green);cursor:pointer;font-size:.82rem;
+  transition:all var(--transition)}
+.retry-btn:hover{background:var(--green);color:#000}
 
-/* ── Cards ────────────────────────────────────────────── */
-.card{background:var(--surface);border-radius:var(--radius);padding:16px;transition:all var(--transition)}
-.card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.85rem;
-  color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-.card-body{font-size:1rem;line-height:1.5;min-height:24px}
-.lang-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.7rem;
-  background:var(--surface2);color:var(--text2);margin-bottom:6px}
-.suggestion-glow{animation:glow 2s ease}
-@keyframes glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(99,102,241,.5)}}
+/* Emotion meter */
+.emotion-meter{padding:8px 12px;background:var(--surface);border:1px solid var(--border);
+  backdrop-filter:blur(20px);transition:all var(--transition)}
+.emotion-meter:hover{border-color:rgba(0,255,65,0.2)}
+.emotion-meter-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.emotion-meter-label{font-size:.72rem;color:var(--text2);font-family:var(--font-mono);
+  text-transform:uppercase;letter-spacing:.04em}
+.stress-toggle-btn{font-family:var(--font-mono);font-size:.68rem;padding:2px 8px;
+  border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;
+  transition:all var(--transition)}
+.stress-toggle-btn:hover{border-color:rgba(0,255,65,0.3);color:var(--green)}
+.emotion-meter-track{height:4px;background:var(--border);overflow:hidden}
+.emotion-meter-fill{height:100%;width:0;background:var(--green);
+  transition:width .5s ease,background-color .5s ease}
+
+/* Stress tracker */
+#stress-tracker{background:var(--surface);border:1px solid var(--border);
+  overflow:hidden;max-height:0;transition:max-height .4s ease,padding .4s ease;padding:0}
+#stress-tracker.open{max-height:160px;padding:10px}
+.stress-chart-wrap{height:120px;position:relative}
+
+/* Mic area */
+.mic-area{display:flex;align-items:center;gap:12px;padding:8px 12px;
+  background:var(--surface);border:1px solid var(--border)}
+.waveform{display:flex;align-items:flex-end;gap:3px;height:26px}
+.waveform .bar{width:3px;background:var(--green);min-height:3px;opacity:.6;
+  transition:height .1s ease}
+.mic-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--green);
+  background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;color:var(--green);transition:all var(--transition);flex-shrink:0}
+.mic-btn:hover{background:var(--dim);box-shadow:var(--green-glow)}
+.mic-btn.listening{background:var(--danger);border-color:var(--danger);color:#fff;
+  box-shadow:0 0 20px rgba(255,51,51,0.4);animation:pulseMic 1.5s infinite}
+@keyframes pulseMic{0%,100%{box-shadow:0 0 20px rgba(255,51,51,0.4)}50%{box-shadow:0 0 30px rgba(255,51,51,0.6)}}
+.mic-status{font-size:.72rem;color:var(--text3);font-family:var(--font-mono)}
+
+/* ── Glass Cards ──────────────────────────────────────── */
+.card{background:rgba(0,10,0,0.8);backdrop-filter:blur(20px);border:1px solid var(--border);
+  padding:14px;transition:all var(--transition)}
+.card:hover{border-color:rgba(0,255,65,0.3);box-shadow:0 0 20px rgba(0,255,65,0.05)}
+.card-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;
+  font-family:var(--font-mono);font-size:.72rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.card-body{font-size:.9rem;line-height:1.6;min-height:18px}
+.lang-badge{display:inline-block;padding:1px 8px;font-size:.68rem;font-weight:500;
+  background:var(--dim);color:var(--green);font-family:var(--font-mono);margin-bottom:4px}
+.suggestion-glow{animation:sglow 2s ease}
+@keyframes sglow{0%,100%{box-shadow:none}50%{box-shadow:0 0 24px rgba(0,255,65,0.2)}}
 .slide-in{animation:slideIn .3s ease forwards}
-@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-.slide-up{animation:slideUp .3s ease forwards}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
 
-/* ── Toast (bottom-left) ──────────────────────────────── */
-#toast-container{position:fixed;bottom:16px;left:16px;z-index:10000;
-  display:flex;flex-direction:column-reverse;gap:8px;max-width:340px}
-.toast{padding:12px 16px;border-radius:var(--radius);color:#fff;font-size:.88rem;
-  opacity:0;transform:translateX(-40px);transition:all .3s ease;
-  display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+/* ── Negotiate panel ──────────────────────────────────── */
+#negotiate-panel{display:none;flex-direction:column;gap:8px}
+#negotiate-panel.visible{display:flex}
+
+/* Power bar */
+.power-bar-wrap{background:rgba(0,10,0,0.8);backdrop-filter:blur(20px);
+  border:1px solid var(--border);padding:14px;transition:all var(--transition)}
+.power-bar-wrap:hover{border-color:rgba(0,255,65,0.3);box-shadow:0 0 20px rgba(0,255,65,0.05)}
+.power-bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.power-bar-title{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.power-bar-score{font-family:var(--font-mono);font-size:1.3rem;font-weight:800;
+  color:var(--green);font-variant-numeric:tabular-nums}
+.power-bar-labels{display:flex;justify-content:space-between;font-family:var(--font-mono);
+  font-size:.65rem;color:var(--text3);margin-bottom:4px}
+.power-bar-track{height:8px;background:linear-gradient(90deg,var(--danger) 0%,var(--text3) 50%,var(--green) 100%);
+  position:relative;overflow:visible;opacity:.25}
+.power-bar-center{position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+  width:2px;height:12px;background:rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(255,255,255,0.3)}
+.power-bar-indicator{position:absolute;top:-6px;width:18px;height:18px;border-radius:50%;
+  background:var(--green);border:2px solid var(--bg);
+  transition:left .6s cubic-bezier(.4,0,.2,1);transform:translateX(-50%);
+  box-shadow:0 0 12px rgba(0,255,65,0.5)}
+
+/* Score ring */
+.score-ring-wrap{background:rgba(0,10,0,0.8);backdrop-filter:blur(20px);
+  border:1px solid var(--border);padding:14px;display:flex;align-items:center;gap:16px;
+  transition:all var(--transition)}
+.score-ring-wrap:hover{border-color:rgba(0,255,65,0.3);box-shadow:0 0 20px rgba(0,255,65,0.05)}
+.score-ring-svg{width:72px;height:72px;flex-shrink:0}
+.score-ring-bg{fill:none;stroke:var(--border);stroke-width:6}
+.score-ring-fill{fill:none;stroke:var(--green);stroke-width:6;stroke-linecap:round;
+  transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .5s ease;
+  transform:rotate(-90deg);transform-origin:center}
+.score-ring-text{fill:var(--green);font-size:18px;font-weight:700;
+  font-family:var(--font-mono);text-anchor:middle;dominant-baseline:central}
+.score-ring-info{flex:1}
+.score-ring-label{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:3px}
+.score-ring-desc{font-size:.82rem;color:var(--text2);line-height:1.5}
+
+/* Whisper panel */
+.whisper-panel{background:var(--bg);border:1px solid var(--border);padding:14px;
+  position:relative;overflow:hidden;transition:all var(--transition)}
+.whisper-panel:hover{border-color:rgba(0,255,65,0.3)}
+.whisper-panel::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;
+  background:var(--green)}
+.whisper-header{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;
+  padding-left:10px}
+.whisper-text{font-family:var(--font-mono);font-size:.88rem;color:var(--green);
+  line-height:1.6;padding-left:10px;min-height:20px}
+.whisper-cursor{display:inline-block;width:8px;height:1em;background:var(--green);
+  animation:blink .8s step-end infinite;vertical-align:text-bottom;margin-left:1px}
+.whisper-prev{font-family:var(--font-mono);font-size:.78rem;color:var(--text3);
+  padding-left:10px;margin-top:6px;line-height:1.5}
+
+/* Momentum */
+.momentum-wrap{background:rgba(0,10,0,0.8);backdrop-filter:blur(20px);
+  border:1px solid var(--border);padding:12px 14px;transition:all var(--transition)}
+.momentum-wrap:hover{border-color:rgba(0,255,65,0.3)}
+.momentum-header{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px}
+.momentum-canvas-wrap{height:48px;position:relative}
+
+/* ── Toast ─────────────────────────────────────────────── */
+#toast-container{position:fixed;bottom:14px;left:14px;z-index:10000;
+  display:flex;flex-direction:column-reverse;gap:6px;max-width:340px}
+.toast{padding:10px 14px;color:#fff;font-size:.82rem;font-family:var(--font-mono);
+  opacity:0;transform:translateX(-30px);transition:all .3s ease;
+  display:flex;align-items:flex-start;gap:8px;line-height:1.5;
+  backdrop-filter:blur(12px);border:1px solid var(--border)}
 .toast.show{opacity:1;transform:translateX(0)}
-.toast.t-red{background:#7f1d1d;border-left:4px solid var(--danger)}
-.toast.t-yellow{background:#78350f;border-left:4px solid var(--warning)}
-.toast.t-blue{background:#1e3a5f;border-left:4px solid #3b82f6}
-.toast.t-green{background:#064e3b;border-left:4px solid var(--success)}
-.toast.t-default{background:var(--surface2);border-left:4px solid var(--primary)}
+.toast.t-red{background:rgba(80,10,10,0.95);border-left:2px solid var(--danger)}
+.toast.t-yellow{background:rgba(80,50,0,0.95);border-left:2px solid var(--warning)}
+.toast.t-blue{background:rgba(0,30,60,0.95);border-left:2px solid #3b82f6}
+.toast.t-green{background:rgba(0,40,10,0.95);border-left:2px solid var(--green)}
+.toast.t-default{background:rgba(10,10,10,0.95);border-left:2px solid var(--green)}
 
 /* ── Connection banner ────────────────────────────────── */
-#conn-banner{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;
-  background:var(--danger);color:#fff;font-size:.85rem;z-index:9998;
+#conn-banner{position:fixed;top:0;left:0;right:0;padding:6px;text-align:center;
+  background:rgba(255,51,51,0.9);backdrop-filter:blur(8px);color:#fff;
+  font-size:.78rem;font-family:var(--font-mono);z-index:9998;
   transform:translateY(-100%);transition:transform .3s ease}
 #conn-banner.visible{transform:translateY(0)}
 
 /* ── Consent banner ───────────────────────────────────── */
-#consent-banner{display:none;align-items:center;justify-content:center;gap:12px;
-  padding:8px 16px;background:#92400e;color:#fef3c7;font-size:.85rem;
-  border-bottom:1px solid #b45309}
+#consent-banner{display:none;align-items:center;justify-content:center;gap:10px;
+  padding:6px 14px;background:rgba(80,50,0,0.9);backdrop-filter:blur(8px);
+  color:var(--warning);font-size:.78rem;font-family:var(--font-mono);
+  border-bottom:1px solid rgba(255,170,0,0.3)}
 #consent-banner.visible{display:flex}
-#consent-banner button{background:none;border:none;color:#fef3c7;font-size:1.1rem;
-  cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+#consent-banner button{background:none;border:none;color:var(--warning);font-size:1rem;
+  cursor:pointer;padding:0 4px;flex-shrink:0}
 
-/* ── Speaker icon ─────────────────────────────────────── */
-.speaker-wrap{display:flex;align-items:center;margin-left:12px}
-.speaker-icon{font-size:1.2rem;transition:all var(--transition);cursor:default}
-.speaker-icon.speaking{animation:speakerPulse .5s infinite alternate}
-@keyframes speakerPulse{from{opacity:1;transform:scale(1)}to{opacity:.4;transform:scale(1.2)}}
-
-/* ── Camera error ─────────────────────────────────────── */
-.camera-error{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:100%;gap:16px;color:var(--text2)}
-.camera-error .icon{font-size:3rem}
-.camera-error p{text-align:center;max-width:260px}
-.retry-btn{padding:8px 24px;border-radius:20px;border:none;background:var(--primary);
-  color:#fff;cursor:pointer;font-size:.9rem}
-
-/* ── Emotion meter ────────────────────────────────────── */
-.emotion-meter{padding:8px 14px;background:var(--surface);border-radius:var(--radius)}
-.emotion-meter-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.emotion-meter-label{font-size:.8rem;color:var(--text2);font-weight:600;
-  text-transform:capitalize;letter-spacing:.03em}
-.stress-toggle-btn{font-size:.72rem;padding:2px 8px;border-radius:10px;border:1px solid var(--surface2);
-  background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition)}
-.stress-toggle-btn:hover{background:var(--surface2);color:var(--text)}
-.emotion-meter-track{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
-.emotion-meter-fill{height:100%;width:0;border-radius:4px;background:#22c55e;
-  transition:width .5s ease,background-color .5s ease}
-
-/* ── Stress tracker ───────────────────────────────────── */
-#stress-tracker{background:var(--surface);border-radius:var(--radius);padding:12px;
-  overflow:hidden;max-height:0;transition:max-height .4s ease,padding .4s ease;padding-top:0;padding-bottom:0}
-#stress-tracker.open{max-height:180px;padding:12px}
-.stress-chart-wrap{height:120px;position:relative}
-
-/* ── History sidebar ──────────────────────────────────── */
-#history-sidebar{width:0;overflow:hidden;transition:width .3s ease;flex-shrink:0;
-  background:var(--surface);border-right:1px solid var(--surface2);display:flex;flex-direction:column}
-#history-sidebar.open{width:240px}
-#history-sidebar-hdr{display:flex;align-items:center;justify-content:space-between;
-  padding:12px 14px;border-bottom:1px solid var(--surface2);font-size:.85rem;
-  font-weight:600;white-space:nowrap;flex-shrink:0}
-#history-sidebar-hdr button{background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer}
-#history-list{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
-.history-card{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:.8rem;line-height:1.4}
-.hc-time{color:var(--text2);margin-bottom:3px;font-size:.72rem}
-.hc-emotion{font-weight:600;margin-bottom:2px}
-.hc-subtext{color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* ── Meeting notes sidebar ────────────────────────────── */
-#meeting-sidebar{width:0;overflow:hidden;transition:width .3s ease;flex-shrink:0;
-  background:var(--surface);border-right:1px solid var(--surface2);display:flex;flex-direction:column}
-#meeting-sidebar.open{width:240px}
-#meeting-sidebar-hdr{display:flex;align-items:center;justify-content:space-between;
-  padding:12px 14px;border-bottom:1px solid var(--surface2);font-size:.85rem;
-  font-weight:600;white-space:nowrap;flex-shrink:0}
-#meeting-sidebar-hdr button{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;
-  padding:4px 8px;border-radius:6px;transition:all var(--transition)}
-#meeting-sidebar-hdr button:hover{background:var(--surface2);color:var(--text)}
-#meeting-notes-list{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
-.meeting-note-item{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:.82rem;
-  line-height:1.4;border-left:3px solid var(--primary);animation:fadeInNote .3s ease}
-@keyframes fadeInNote{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
-.mn-time{color:var(--text2);font-size:.7rem;margin-bottom:4px}
-.mn-emotion{display:inline-block;padding:1px 6px;border-radius:6px;font-size:.7rem;
-  background:rgba(99,102,241,.2);color:#a78bfa;margin-bottom:4px}
-.mn-text{color:var(--text)}
-#export-notes-btn{margin:8px;padding:8px;border-radius:8px;border:1px solid var(--surface2);
-  background:transparent;color:var(--text2);cursor:pointer;font-size:.82rem;
-  transition:all var(--transition);text-align:center}
-#export-notes-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
-
-/* ── Cultural tip card ────────────────────────────────── */
-#cultural-tip-card{background:var(--surface);border-radius:var(--radius);padding:16px;
-  border-left:4px solid #3b82f6;opacity:0;transform:translateY(-8px);
-  transition:opacity .4s ease,transform .4s ease;display:none}
+/* ── Cultural tip ─────────────────────────────────────── */
+#cultural-tip-card{background:rgba(0,10,0,0.8);backdrop-filter:blur(20px);
+  border:1px solid var(--border);padding:14px;border-left:2px solid var(--green);
+  opacity:0;transform:translateY(-6px);transition:opacity .4s ease,transform .4s ease;display:none}
 #cultural-tip-card.visible{opacity:1;transform:translateY(0);display:block}
-.ct-header{font-size:.85rem;color:#3b82f6;font-weight:700;margin-bottom:8px}
-.ct-tip{font-size:.95rem;color:var(--text);margin-bottom:8px;line-height:1.5}
-.ct-actions{display:flex;gap:8px;flex-wrap:wrap}
-.ct-do{background:rgba(16,185,129,.15);color:#6ee7b7;padding:4px 10px;
-  border-radius:8px;font-size:.8rem}
-.ct-avoid{background:rgba(239,68,68,.15);color:#fca5a5;padding:4px 10px;
-  border-radius:8px;font-size:.8rem}
+.ct-header{font-family:var(--font-mono);font-size:.75rem;color:var(--green);font-weight:600;
+  margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.ct-tip{font-size:.88rem;color:var(--text);margin-bottom:8px;line-height:1.6}
+.ct-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ct-do{background:var(--dim);color:var(--green);padding:3px 8px;font-size:.72rem;
+  font-family:var(--font-mono)}
+.ct-avoid{background:rgba(255,51,51,.1);color:var(--danger);padding:3px 8px;font-size:.72rem;
+  font-family:var(--font-mono)}
 
-/* ── Agent actions panel ──────────────────────────────── */
-#agent-actions-card{background:var(--surface);border-radius:var(--radius);padding:16px}
-#agent-actions-list{display:flex;flex-direction:column;gap:8px;min-height:32px}
-.agent-action-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;
-  background:var(--surface2);border-radius:8px;animation:actionSlide .35s ease forwards}
-@keyframes actionSlide{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-.aa-icon{font-size:1.3rem;flex-shrink:0;margin-top:1px}
+/* ── Agent actions ────────────────────────────────────── */
+#agent-actions-card{background:rgba(0,10,0,0.8);backdrop-filter:blur(20px);
+  border:1px solid var(--border);padding:14px}
+#agent-actions-list{display:flex;flex-direction:column;gap:6px;min-height:24px}
+.agent-action-item{display:flex;align-items:flex-start;gap:8px;padding:8px;
+  background:var(--surface);border:1px solid var(--border);
+  animation:slideUp .3s ease forwards}
+.aa-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
 .aa-body{flex:1;min-width:0}
-.aa-type{font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
-.aa-desc{font-size:.88rem;color:var(--text);line-height:1.4;word-break:break-word}
-.aa-time{font-size:.7rem;color:var(--text2);margin-top:2px}
-.aa-empty{color:var(--text2);font-size:.88rem;font-style:italic}
+.aa-type{font-family:var(--font-mono);font-size:.68rem;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:2px}
+.aa-desc{font-size:.82rem;color:var(--text);line-height:1.4;word-break:break-word}
+.aa-time{font-family:var(--font-mono);font-size:.65rem;color:var(--text3);margin-top:2px}
+.aa-empty{color:var(--text3);font-size:.82rem;font-family:var(--font-mono)}
 
-/* ── Emergency panel ──────────────────────────────────── */
-#emergency-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);
-  background:#1a0f0f;border:2px solid var(--danger);border-radius:16px;
-  padding:24px;z-index:9990;width:340px;opacity:0;pointer-events:none;
-  transition:all .3s ease;box-shadow:0 0 40px rgba(239,68,68,.4)}
-#emergency-panel.visible{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:all}
-#emergency-panel h2{color:var(--danger);font-size:1.3rem;margin-bottom:16px;text-align:center}
-.emergency-btns{display:flex;gap:10px;margin-bottom:12px}
-.emergency-btns a{flex:1;padding:12px;border-radius:10px;text-decoration:none;text-align:center;
-  font-size:.9rem;font-weight:600;transition:all var(--transition)}
-.btn-hospital{background:rgba(16,185,129,.2);color:#6ee7b7;border:1px solid #10b981}
-.btn-hospital:hover{background:rgba(16,185,129,.35)}
-.btn-police{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid #3b82f6}
-.btn-police:hover{background:rgba(59,130,246,.35)}
-.btn-112{display:block;width:100%;padding:12px;background:var(--danger);color:#fff;
-  border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;
-  margin-bottom:10px;transition:all var(--transition)}
-.btn-112:hover{background:#dc2626}
-.btn-dismiss{display:block;width:100%;padding:8px;background:transparent;color:var(--text2);
-  border:1px solid var(--surface2);border-radius:10px;font-size:.85rem;cursor:pointer;
-  transition:all var(--transition)}
-.btn-dismiss:hover{background:var(--surface2);color:var(--text)}
-#emergency-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9989;
-  opacity:0;pointer-events:none;transition:opacity .3s ease}
+/* ── Emergency ────────────────────────────────────────── */
+#emergency-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  z-index:9989;opacity:0;pointer-events:none;transition:opacity .3s ease}
 #emergency-overlay.visible{opacity:1;pointer-events:all}
+#emergency-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);
+  background:rgba(10,0,0,0.97);backdrop-filter:blur(20px);border:2px solid var(--danger);
+  padding:24px;z-index:9990;width:340px;opacity:0;pointer-events:none;
+  transition:all .3s ease;box-shadow:0 0 60px rgba(255,51,51,.3)}
+#emergency-panel.visible{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:all}
+#emergency-panel h2{color:var(--danger);font-family:var(--font-mono);font-size:1rem;
+  font-weight:700;margin-bottom:16px;text-align:center}
+.emergency-btns{display:flex;gap:8px;margin-bottom:10px}
+.emergency-btns a{flex:1;padding:10px;text-decoration:none;text-align:center;
+  font-size:.82rem;font-weight:600;font-family:var(--font-mono);transition:all var(--transition)}
+.btn-hospital{background:rgba(0,255,65,.08);color:var(--green);border:1px solid rgba(0,255,65,.2)}
+.btn-hospital:hover{background:rgba(0,255,65,.15)}
+.btn-police{background:rgba(59,130,246,.08);color:#93c5fd;border:1px solid rgba(59,130,246,.2)}
+.btn-police:hover{background:rgba(59,130,246,.15)}
+.btn-112{display:block;width:100%;padding:10px;background:var(--danger);color:#fff;
+  border:none;font-size:.95rem;font-weight:700;cursor:pointer;font-family:var(--font-mono);
+  margin-bottom:8px;transition:all var(--transition)}
+.btn-112:hover{background:#cc0000}
+.btn-dismiss{display:block;width:100%;padding:6px;background:transparent;color:var(--text3);
+  border:1px solid var(--border);font-size:.78rem;cursor:pointer;font-family:var(--font-mono);
+  transition:all var(--transition)}
+.btn-dismiss:hover{border-color:var(--green);color:var(--green)}
 
 /* ── Responsive ───────────────────────────────────────── */
 @media(max-width:768px){
   .main{flex-direction:column}
-  .camera-panel{flex:0 0 auto;max-height:45vh}
+  .camera-panel{flex:0 0 auto;max-height:250px}
   .analysis-panel{flex:1;overflow-y:auto}
-  #history-sidebar.open,#meeting-sidebar.open{width:200px}
+  .sidebar.open{width:220px}
+  .header-center{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
+  .header-center::-webkit-scrollbar{display:none}
+  .home-link{display:none}
+  body{font-size:85%}
+  .card{padding:12px}
+  .mode-btn{padding:4px 8px;font-size:.68rem}
+  .power-bar-wrap,.score-ring-wrap,.whisper-panel,.momentum-wrap{padding:12px}
+  #negotiate-panel{gap:6px}
 }
 </style>
 </head>
 <body>
 
-<!-- Loading -->
-<div id="loading">
-  <h1>ToneLens</h1>
-  <p style="color:var(--text2);margin-bottom:16px">Initializing agent...</p>
-  <div class="dots"><span></span><span></span><span></span></div>
-</div>
-
 <!-- Banners -->
 <div id="conn-banner"></div>
 <div id="consent-banner">
-  <span>&#128308; ToneLens Active &mdash; All parties should be aware tone analysis is running</span>
+  <span>&#128308; ToneLens Active - All parties should be aware tone analysis is running</span>
   <button id="dismissConsent" title="Dismiss">&times;</button>
 </div>
 
-<!-- Emergency overlay + panel -->
+<!-- Emergency -->
 <div id="emergency-overlay"></div>
 <div id="emergency-panel">
-  <h2>&#128680; Distress Detected</h2>
+  <h2>&#128680; DISTRESS DETECTED</h2>
   <div class="emergency-btns">
-    <a id="btnHospital" href="#" target="_blank" rel="noopener" class="btn-hospital">&#127973; Find Hospital</a>
-    <a id="btnPolice"   href="#" target="_blank" rel="noopener" class="btn-police">&#128110; Find Police</a>
+    <a id="btnHospital" href="#" target="_blank" rel="noopener" class="btn-hospital">&#127973; Hospital</a>
+    <a id="btnPolice" href="#" target="_blank" rel="noopener" class="btn-police">&#128110; Police</a>
   </div>
   <button class="btn-112" onclick="window.location.href='tel:112'">&#128222; Call 112</button>
   <button class="btn-dismiss" id="dismissEmergency">Dismiss</button>
 </div>
 
-<!-- Toast container (bottom-left) -->
+<!-- Toast -->
 <div id="toast-container"></div>
 
 <!-- Header -->
 <header>
-  <div class="logo">
-    <span class="status-dot" id="statusDot"></span>
-    <span>ToneLens</span>
+  <div class="header-left">
+    <a href="/" class="home-link">&larr; HOME</a>
+    <div class="logo">ToneLens<span class="logo-cursor"></span></div>
   </div>
-  <div class="mode-btns">
+  <div class="header-center">
     <button class="mode-btn active" data-mode="travel">&#127757; Travel</button>
     <button class="mode-btn" data-mode="meeting">&#128188; Meeting</button>
     <button class="mode-btn" data-mode="present">&#127908; Present</button>
+    <button class="mode-btn" data-mode="negotiate">&#9878;&#65039; Negotiate</button>
+    <button id="mock-test-btn">&#9889; Mock Test</button>
   </div>
-  <button class="mode-btn" id="historyBtn" style="margin-left:8px">&#128203; History</button>
-  <div class="speaker-wrap">
+  <div class="header-right">
+    <div class="conn-status">
+      <span class="conn-dot" id="connDot"></span>
+      <span id="connLabel">OFFLINE</span>
+    </div>
+    <button class="icon-btn" id="historyBtn" title="History">&#128203;</button>
     <span class="speaker-icon" id="speakerIcon">&#128264;</span>
   </div>
 </header>
@@ -299,27 +426,29 @@ canvas{display:none}
 <div class="main">
 
   <!-- History sidebar -->
-  <div id="history-sidebar">
-    <div id="history-sidebar-hdr">
-      <span>&#128203; History</span>
+  <div class="sidebar" id="history-sidebar">
+    <div class="sidebar-hdr">
+      <span>> history</span>
       <button id="closeHistoryBtn">&times;</button>
     </div>
-    <div id="history-list"></div>
+    <div class="sidebar-list" id="history-list">
+      <div class="hc-empty">> no_history_found. start a conversation.</div>
+    </div>
   </div>
 
-  <!-- Meeting notes sidebar (shown in meeting mode) -->
-  <div id="meeting-sidebar">
-    <div id="meeting-sidebar-hdr">
-      <span>&#128203; Meeting Notes</span>
-      <button id="exportNotesBtn" title="Export notes">&#128229; Export</button>
+  <!-- Meeting notes sidebar -->
+  <div class="sidebar" id="meeting-sidebar">
+    <div class="sidebar-hdr">
+      <span>> meeting_notes</span>
+      <button id="exportNotesBtn" title="Export">&#128229;</button>
     </div>
-    <div id="meeting-notes-list">
-      <div class="aa-empty" style="padding:12px">Notes will appear here...</div>
+    <div class="sidebar-list" id="meeting-notes-list">
+      <div class="hc-empty">> awaiting_notes...</div>
     </div>
-    <button id="export-notes-btn">&#128229; Export Notes (.txt)</button>
+    <button class="export-btn" id="export-notes-btn">[ EXPORT .TXT ]</button>
   </div>
 
-  <!-- Camera + mic panel -->
+  <!-- Camera + mic -->
   <div class="camera-panel">
     <div class="camera-wrap" id="cameraWrap">
       <video id="video" autoplay playsinline muted></video>
@@ -332,54 +461,46 @@ canvas{display:none}
       <div class="camera-error" id="cameraError" style="display:none">
         <div class="icon">&#128247;</div>
         <p>Enable camera access to use ToneLens</p>
-        <button class="retry-btn" id="retryCamera">Retry</button>
+        <button class="retry-btn" id="retryCamera">[ RETRY ]</button>
       </div>
     </div>
 
-    <!-- Emotion meter + stress toggle -->
     <div class="emotion-meter" id="emotionMeter">
       <div class="emotion-meter-header">
-        <div class="emotion-meter-label" id="emotionMeterLabel">calm &mdash; 70%</div>
-        <button class="stress-toggle-btn" id="stressToggleBtn">&#128200; Stress</button>
+        <div class="emotion-meter-label" id="emotionMeterLabel">calm - 70%</div>
+        <button class="stress-toggle-btn" id="stressToggleBtn">&#128200; stress</button>
       </div>
       <div class="emotion-meter-track">
         <div class="emotion-meter-fill" id="emotionMeterFill"></div>
       </div>
     </div>
 
-    <!-- Collapsible stress tracker -->
     <div id="stress-tracker">
-      <div class="stress-chart-wrap">
-        <canvas id="stressChart"></canvas>
-      </div>
+      <div class="stress-chart-wrap"><canvas id="stressChart"></canvas></div>
     </div>
 
     <div class="mic-area">
       <div class="waveform" id="waveform">
-        <div class="bar" style="height:4px"></div>
-        <div class="bar" style="height:4px"></div>
-        <div class="bar" style="height:4px"></div>
-        <div class="bar" style="height:4px"></div>
-        <div class="bar" style="height:4px"></div>
+        <div class="bar" style="height:3px"></div><div class="bar" style="height:3px"></div>
+        <div class="bar" style="height:3px"></div><div class="bar" style="height:3px"></div>
+        <div class="bar" style="height:3px"></div>
       </div>
       <button class="mic-btn" id="micBtn">&#127908;</button>
-      <span class="mic-status" id="micStatus">Ready</span>
+      <span class="mic-status" id="micStatus">> ready</span>
     </div>
   </div>
 
   <!-- Analysis panel -->
   <div class="analysis-panel">
 
-    <!-- Translation -->
     <div class="card" id="translationCard">
-      <div class="card-header" id="labelTranslation">&#127760; Translation</div>
+      <div class="card-header" id="labelTranslation">[>] TRANSLATION</div>
       <div class="lang-badge" id="langBadge" style="display:none"></div>
-      <div class="card-body" id="translationText">Waiting for speech...</div>
+      <div class="card-body" id="translationText">> awaiting speech...</div>
     </div>
 
-    <!-- Cultural tip (hidden until triggered) -->
     <div id="cultural-tip-card">
-      <div class="ct-header" id="ctHeader">&#127760; Cultural Tip</div>
+      <div class="ct-header" id="ctHeader">[>] CULTURAL TIP</div>
       <div class="ct-tip" id="ctTip"></div>
       <div class="ct-actions">
         <span class="ct-do" id="ctDo"></span>
@@ -387,31 +508,68 @@ canvas{display:none}
       </div>
     </div>
 
-    <!-- Subtext -->
     <div class="card" id="subtextCard">
-      <div class="card-header" id="labelSubtext">&#129504; Emotional Context</div>
-      <div class="card-body" id="subtextText">Insight will appear here...</div>
+      <div class="card-header" id="labelSubtext">[>] EMOTIONAL CONTEXT</div>
+      <div class="card-body" id="subtextText">> insight will appear here...</div>
     </div>
 
-    <!-- Suggestion -->
     <div class="card" id="suggestionCard">
-      <div class="card-header" id="labelSuggestion">&#128161; Suggestion</div>
-      <div class="card-body" id="suggestionText">Suggestion will appear here...</div>
+      <div class="card-header" id="labelSuggestion">[>] SUGGESTION</div>
+      <div class="card-body" id="suggestionText">> suggestion will appear here...</div>
     </div>
 
-    <!-- Agent Actions -->
-    <div class="card" id="agent-actions-card">
-      <div class="card-header">&#129302; Agent Actions</div>
-      <div id="agent-actions-list">
-        <div class="aa-empty">Agent will act on events automatically...</div>
+    <!-- Negotiate panel -->
+    <div id="negotiate-panel">
+      <div class="power-bar-wrap">
+        <div class="power-bar-header">
+          <span class="power-bar-title">[>] POWER BALANCE</span>
+          <span class="power-bar-score" id="powerScore">50</span>
+        </div>
+        <div class="power-bar-labels">
+          <span>They lead</span><span>Balanced</span><span>You lead</span>
+        </div>
+        <div class="power-bar-track">
+          <div class="power-bar-center"></div>
+          <div class="power-bar-indicator" id="powerIndicator" style="left:50%"></div>
+        </div>
+      </div>
+
+      <div class="score-ring-wrap">
+        <svg class="score-ring-svg" viewBox="0 0 80 80">
+          <circle class="score-ring-bg" cx="40" cy="40" r="34"/>
+          <circle class="score-ring-fill" id="scoreRingFill" cx="40" cy="40" r="34"
+            stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+          <text class="score-ring-text" id="scoreRingText" x="40" y="40">50</text>
+        </svg>
+        <div class="score-ring-info">
+          <div class="score-ring-label">Negotiation Score</div>
+          <div class="score-ring-desc" id="scoreRingDesc">Balanced position - maintain composure</div>
+        </div>
+      </div>
+
+      <div class="whisper-panel">
+        <div class="whisper-header">[>] COACH WHISPER</div>
+        <div class="whisper-text" id="whisperText"><span class="whisper-cursor"></span></div>
+        <div class="whisper-prev" id="whisperPrev"></div>
+      </div>
+
+      <div class="momentum-wrap">
+        <div class="momentum-header">[>] MOMENTUM</div>
+        <div class="momentum-canvas-wrap"><canvas id="momentumChart"></canvas></div>
       </div>
     </div>
 
-    <!-- Transcript -->
+    <div class="card" id="agent-actions-card">
+      <div class="card-header">[>] AGENT ACTIONS</div>
+      <div id="agent-actions-list">
+        <div class="aa-empty">> agent will act on events automatically...</div>
+      </div>
+    </div>
+
     <div class="card" id="transcriptCard">
-      <div class="card-header">&#128196; Transcript</div>
+      <div class="card-header">[>] TRANSCRIPT</div>
       <div class="card-body" id="transcriptText"
-        style="max-height:120px;overflow-y:auto;font-size:.85rem;color:var(--text2)"></div>
+        style="max-height:100px;overflow-y:auto;font-size:.78rem;color:var(--text3);font-family:var(--font-mono)"></div>
     </div>
 
   </div>
@@ -422,82 +580,78 @@ canvas{display:none}
 "use strict";
 
 /* ── State ─────────────────────────────────────────────── */
-const sessionId = crypto.randomUUID();
-let ws = null;
-let currentMode = "travel";
-let isListening = false;
-let audioCtx = null;
-let micStream = null;
-let processor = null;
-let analyser = null;
-let videoStream = null;
-let frameInterval = null;
-let reconnectTimer = null;
-let reconnectCountdown = 3;
-let noAudioTimer = null;
-let playbackCtx = null;
-let nextPlayTime = 0;
-let screenStream = null;
-let speakerTimer = null;
-let exchangeHistory = [];
-let agentActions = [];
-let meetingNotes = [];
-let userLat = 0;
-let userLng = 0;
+var sessionId = crypto.randomUUID();
+var ws = null;
+var currentMode = "travel";
+var isListening = false;
+var audioCtx = null, micStream = null, processor = null, analyser = null;
+var videoStream = null, frameInterval = null, reconnectTimer = null;
+var reconnectCountdown = 3, noAudioTimer = null;
+var playbackCtx = null, nextPlayTime = 0;
+var screenStream = null, speakerTimer = null;
+var exchangeHistory = [], agentActions = [], meetingNotes = [];
+var userLat = 0, userLng = 0;
 
-/* ── Stress tracker state ──────────────────────────────── */
-const stressMap = {
-  angry:1.0, frustrated:0.9, nervous:0.75, uncertain:0.6,
-  excited:0.4, calm:0.2, confident:0.15, happy:0.1
-};
-let stressHistory = [];
-let consecutiveHighStress = 0;
-let stressChart = null;
-let stressChartInitialized = false;
+/* Stress */
+var stressMap = {angry:1.0,frustrated:0.9,nervous:0.75,uncertain:0.6,excited:0.4,calm:0.2,confident:0.15,happy:0.1};
+var stressHistory = [], consecutiveHighStress = 0, stressChart = null, stressChartInitialized = false;
 
-/* ── DOM refs ──────────────────────────────────────────── */
-const $loading           = document.getElementById("loading");
-const $statusDot         = document.getElementById("statusDot");
-const $video             = document.getElementById("video");
-const $canvas            = document.getElementById("canvas");
-const $cameraWrap        = document.getElementById("cameraWrap");
-const $cameraError       = document.getElementById("cameraError");
-const $retryCamera       = document.getElementById("retryCamera");
-const $micBtn            = document.getElementById("micBtn");
-const $micStatus         = document.getElementById("micStatus");
-const $waveform          = document.getElementById("waveform");
-const $emotionBadge      = document.getElementById("emotionBadge");
-const $emoIcon           = document.getElementById("emoIcon");
-const $emoLabel          = document.getElementById("emoLabel");
-const $emoConf           = document.getElementById("emoConf");
-const $translationText   = document.getElementById("translationText");
-const $langBadge         = document.getElementById("langBadge");
-const $subtextText       = document.getElementById("subtextText");
-const $suggestionText    = document.getElementById("suggestionText");
-const $suggestionCard    = document.getElementById("suggestionCard");
-const $transcriptText    = document.getElementById("transcriptText");
-const $connBanner        = document.getElementById("conn-banner");
-const $consentBanner     = document.getElementById("consent-banner");
-const $speakerIcon       = document.getElementById("speakerIcon");
-const $emotionMeterFill  = document.getElementById("emotionMeterFill");
-const $emotionMeterLabel = document.getElementById("emotionMeterLabel");
-const $historySidebar    = document.getElementById("history-sidebar");
-const $historyList       = document.getElementById("history-list");
-const $meetingSidebar    = document.getElementById("meeting-sidebar");
-const $meetingNotesList  = document.getElementById("meeting-notes-list");
-const $labelTranslation  = document.getElementById("labelTranslation");
-const $labelSubtext      = document.getElementById("labelSubtext");
-const $labelSuggestion   = document.getElementById("labelSuggestion");
-const $culturalTipCard   = document.getElementById("cultural-tip-card");
-const $agentActionsList  = document.getElementById("agent-actions-list");
-const $emergencyPanel    = document.getElementById("emergency-panel");
-const $emergencyOverlay  = document.getElementById("emergency-overlay");
-const $stressTracker     = document.getElementById("stress-tracker");
-const $stressToggleBtn   = document.getElementById("stressToggleBtn");
-const bars               = $waveform.querySelectorAll(".bar");
-let culturalTipTimer     = null;
+/* Negotiate */
+var powerHistory = [], momentumChart = null, momentumInitialized = false;
+var whisperTypeTimer = null, prevWhispers = [];
 
-/* ── Event listeners ───────────────────────────────────── */
+/* ── DOM ───────────────────────────────────────────────── */
+var $connDot          = document.getElementById("connDot");
+var $connLabel        = document.getElementById("connLabel");
+var $video            = document.getElementById("video");
+var $canvas           = document.getElementById("canvas");
+var $cameraWrap       = document.getElementById("cameraWrap");
+var $cameraError      = document.getElementById("cameraError");
+var $retryCamera      = document.getElementById("retryCamera");
+var $micBtn           = document.getElementById("micBtn");
+var $micStatus        = document.getElementById("micStatus");
+var $waveform         = document.getElementById("waveform");
+var $emotionBadge     = document.getElementById("emotionBadge");
+var $emoIcon          = document.getElementById("emoIcon");
+var $emoLabel         = document.getElementById("emoLabel");
+var $emoConf          = document.getElementById("emoConf");
+var $translationText  = document.getElementById("translationText");
+var $langBadge        = document.getElementById("langBadge");
+var $subtextText      = document.getElementById("subtextText");
+var $suggestionText   = document.getElementById("suggestionText");
+var $suggestionCard   = document.getElementById("suggestionCard");
+var $transcriptText   = document.getElementById("transcriptText");
+var $connBanner       = document.getElementById("conn-banner");
+var $consentBanner    = document.getElementById("consent-banner");
+var $speakerIcon      = document.getElementById("speakerIcon");
+var $emotionMeterFill = document.getElementById("emotionMeterFill");
+var $emotionMeterLabel= document.getElementById("emotionMeterLabel");
+var $historySidebar   = document.getElementById("history-sidebar");
+var $historyList      = document.getElementById("history-list");
+var $meetingSidebar   = document.getElementById("meeting-sidebar");
+var $meetingNotesList = document.getElementById("meeting-notes-list");
+var $labelTranslation = document.getElementById("labelTranslation");
+var $labelSubtext     = document.getElementById("labelSubtext");
+var $labelSuggestion  = document.getElementById("labelSuggestion");
+var $culturalTipCard  = document.getElementById("cultural-tip-card");
+var $agentActionsList = document.getElementById("agent-actions-list");
+var $emergencyPanel   = document.getElementById("emergency-panel");
+var $emergencyOverlay = document.getElementById("emergency-overlay");
+var $stressTracker    = document.getElementById("stress-tracker");
+var $stressToggleBtn  = document.getElementById("stressToggleBtn");
+var $negotiatePanel   = document.getElementById("negotiate-panel");
+var $powerScore       = document.getElementById("powerScore");
+var $powerIndicator   = document.getElementById("powerIndicator");
+var $scoreRingFill    = document.getElementById("scoreRingFill");
+var $scoreRingText    = document.getElementById("scoreRingText");
+var $scoreRingDesc    = document.getElementById("scoreRingDesc");
+var $whisperText      = document.getElementById("whisperText");
+var $whisperPrev      = document.getElementById("whisperPrev");
+var $mockTestBtn      = document.getElementById("mock-test-btn");
+var bars              = $waveform.querySelectorAll(".bar");
+var culturalTipTimer  = null;
+
+/* ── Event Listeners ───────────────────────────────────── */
 document.getElementById("dismissConsent").addEventListener("click", function(){
   $consentBanner.classList.remove("visible");
 });
@@ -513,214 +667,239 @@ document.getElementById("export-notes-btn").addEventListener("click", exportNote
 document.getElementById("exportNotesBtn").addEventListener("click", exportNotes);
 $stressToggleBtn.addEventListener("click", function(){
   $stressTracker.classList.toggle("open");
-  if($stressTracker.classList.contains("open") && !stressChartInitialized){
-    initStressChart();
-  }
+  if($stressTracker.classList.contains("open") && !stressChartInitialized) initStressChart();
 });
 
 /* ── Maps ──────────────────────────────────────────────── */
-const emojiMap = {
-  nervous:"😰", confident:"💪", frustrated:"😤", happy:"😊",
-  uncertain:"🤔", deceptive:"⚡", calm:"😌", excited:"🚀", angry:"😡"
+var emojiMap = {nervous:"\uD83D\uDE30",confident:"\uD83D\uDCAA",frustrated:"\uD83D\uDE24",
+  happy:"\uD83D\uDE0A",uncertain:"\uD83E\uDD14",deceptive:"\u26A1",
+  calm:"\uD83D\uDE0C",excited:"\uD83D\uDE80",angry:"\uD83D\uDE21"};
+var colorMap = {nervous:"#ffaa00",confident:"#00ff41",frustrated:"#ff3333",happy:"#00ff41",
+  uncertain:"#00cc33",deceptive:"#ff3333",calm:"#00ff41",excited:"#3b82f6",angry:"#ff3333"};
+var meterColorMap = {calm:"#00ff41",happy:"#00ff41",confident:"#00ff41",
+  nervous:"#ffaa00",uncertain:"#ffaa00",frustrated:"#ff3333",angry:"#ff3333",
+  deceptive:"#ff3333",excited:"#3b82f6"};
+var modeLabels = {
+  travel:   {translation:"[>] TRANSLATION",  subtext:"[>] EMOTIONAL CONTEXT", suggestion:"[>] SUGGESTION"},
+  meeting:  {translation:"[>] TRANSLATION",  subtext:"[>] EMOTIONAL CONTEXT", suggestion:"[>] SUGGESTION"},
+  present:  {translation:"[>] FILLER WORDS", subtext:"[>] PACE ANALYSIS",     suggestion:"[>] COACHING TIP"},
+  negotiate:{translation:"[>] TRANSLATION",  subtext:"[>] TACTICAL READ",     suggestion:"[>] COUNTER-MOVE"}
 };
-const colorMap = {
-  nervous:"#f59e0b", confident:"#10b981", frustrated:"#ef4444", happy:"#10b981",
-  uncertain:"#6366f1", deceptive:"#ef4444", calm:"#10b981", excited:"#3b82f6", angry:"#ef4444"
-};
-const meterColorMap = {
-  calm:"#22c55e", happy:"#22c55e", confident:"#22c55e",
-  nervous:"#eab308", uncertain:"#eab308",
-  frustrated:"#ef4444", angry:"#ef4444", deceptive:"#ef4444",
-  excited:"#3b82f6"
-};
-const modeLabels = {
-  travel:  { translation:"&#127760; Translation",  subtext:"&#129504; Emotional Context", suggestion:"&#128161; Suggestion" },
-  meeting: { translation:"&#127760; Translation",  subtext:"&#129504; Emotional Context", suggestion:"&#128161; Suggestion" },
-  present: { translation:"&#128308; Filler Words", subtext:"&#9203; Pace Analysis",       suggestion:"&#127908; Coaching Tip" }
-};
-const actionIconMap = {
-  cultural_tip:"🌐", emergency:"🚨", note_saved:"📋", stress_report:"📊"
-};
-const actionLabelMap = {
-  cultural_tip:"Cultural Tip", emergency:"Emergency", note_saved:"Note Saved", stress_report:"Stress Report"
-};
+var actionIconMap = {cultural_tip:"\uD83C\uDF10",emergency:"\uD83D\uDEA8",
+  note_saved:"\uD83D\uDCCB",stress_report:"\uD83D\uDCCA"};
+var actionLabelMap = {cultural_tip:"CULTURAL TIP",emergency:"EMERGENCY",
+  note_saved:"NOTE SAVED",stress_report:"STRESS REPORT"};
 
-/* ── Voice announcements ───────────────────────────────── */
+/* ── Voice ─────────────────────────────────────────────── */
 function speak(text){
   if(!window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 1.0;
-  u.pitch = 1.0;
+  var u = new SpeechSynthesisUtterance(text);
+  u.rate=1.0; u.pitch=1.0;
   window.speechSynthesis.speak(u);
 }
 
-/* ── Geolocation ───────────────────────────────────────── */
+/* ── Geo ───────────────────────────────────────────────── */
 function requestGeolocation(){
   if(!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(function(pos){
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-    send({type:"location", lat:userLat, lng:userLng});
-  }, function(err){
-    console.warn("Geolocation unavailable:", err.message);
-  });
+    userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+    send({type:"location",lat:userLat,lng:userLng});
+  }, function(){});
 }
 
 /* ── Toast ─────────────────────────────────────────────── */
 function showToast(message, type){
-  var cls = "toast t-" + (type || "default");
   var t = document.createElement("div");
-  t.className = cls;
+  t.className = "toast t-" + (type||"default");
   t.textContent = message;
   document.getElementById("toast-container").appendChild(t);
   requestAnimationFrame(function(){ t.classList.add("show"); });
-  setTimeout(function(){
-    t.classList.remove("show");
-    setTimeout(function(){ t.remove(); }, 300);
-  }, 5000);
+  setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){t.remove();},300); },5000);
 }
 
 /* ── Mode helpers ──────────────────────────────────────── */
 function applyModeLabels(mode){
   var lbl = modeLabels[mode] || modeLabels.travel;
-  $labelTranslation.innerHTML = lbl.translation;
-  $labelSubtext.innerHTML     = lbl.subtext;
-  $labelSuggestion.innerHTML  = lbl.suggestion;
+  $labelTranslation.textContent = lbl.translation;
+  $labelSubtext.textContent     = lbl.subtext;
+  $labelSuggestion.textContent  = lbl.suggestion;
+  if(mode === "negotiate"){
+    $negotiatePanel.classList.add("visible");
+    if(!momentumInitialized) initMomentumChart();
+  } else {
+    $negotiatePanel.classList.remove("visible");
+  }
 }
 
 function updateEmotionMeter(label, conf){
-  var color = meterColorMap[label] || "#6366f1";
+  var color = meterColorMap[label] || "#00ff41";
   $emotionMeterFill.style.width = conf + "%";
   $emotionMeterFill.style.backgroundColor = color;
-  $emotionMeterLabel.textContent = label.charAt(0).toUpperCase() + label.slice(1) + " \u2014 " + conf + "%";
+  $emotionMeterLabel.textContent = label.toUpperCase() + " - " + conf + "%";
 }
 
-/* ── Stress tracker ────────────────────────────────────── */
+/* ── Stress chart ──────────────────────────────────────── */
 function initStressChart(){
   stressChartInitialized = true;
-  var ctx = document.getElementById("stressChart").getContext("2d");
-  stressChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: stressHistory.map(function(_,i){ return i+1; }),
-      datasets: [{
-        data: stressHistory.map(function(e){ return stressMap[e] || 0.5; }),
-        borderColor: "#22c55e",
-        backgroundColor: "rgba(34,197,94,.1)",
-        borderWidth: 2,
-        pointRadius: 3,
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins:{ legend:{display:false} },
-      scales:{
-        x:{ display:false },
-        y:{ min:0, max:1, display:true, ticks:{color:"#94a3b8",font:{size:10}},
-            grid:{color:"rgba(255,255,255,.05)"} }
-      },
-      animation:{ duration:300 }
-    }
+  stressChart = new Chart(document.getElementById("stressChart").getContext("2d"), {
+    type:"line",
+    data:{labels:stressHistory.map(function(_,i){return i+1;}),
+      datasets:[{data:stressHistory.map(function(e){return stressMap[e]||0.5;}),
+        borderColor:"#00ff41",backgroundColor:"rgba(0,255,65,.06)",
+        borderWidth:2,pointRadius:2,tension:0.4,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{display:false},y:{min:0,max:1,display:true,
+        ticks:{color:"#444",font:{size:9,family:"JetBrains Mono"}},
+        grid:{color:"rgba(0,255,65,.03)"}}},animation:{duration:300}}
   });
 }
 
 function updateStressTracker(emotion){
   stressHistory.push(emotion);
-  if(stressHistory.length > 10) stressHistory.shift();
-
-  var values = stressHistory.map(function(e){ return stressMap[e] || 0.5; });
-  var avg = values.reduce(function(a,b){ return a+b; }, 0) / values.length;
-
-  // Line color
-  var lineColor = avg > 0.7 ? "#ef4444" : avg >= 0.4 ? "#f59e0b" : "#22c55e";
-  var bgColor   = avg > 0.7 ? "rgba(239,68,68,.1)" : avg >= 0.4 ? "rgba(245,158,11,.1)" : "rgba(34,197,94,.1)";
-
-  // Consecutive high stress check
-  var sv = stressMap[emotion] || 0.5;
-  if(sv > 0.75){
-    consecutiveHighStress++;
-    if(consecutiveHighStress >= 3){
-      showToast("⚠️ High stress detected", "yellow");
-      consecutiveHighStress = 0;
-    }
-  } else {
-    consecutiveHighStress = 0;
-  }
-
+  if(stressHistory.length>10) stressHistory.shift();
+  var values = stressHistory.map(function(e){return stressMap[e]||0.5;});
+  var avg = values.reduce(function(a,b){return a+b;},0)/values.length;
+  var lc = avg>0.7?"#ff3333":avg>=0.4?"#ffaa00":"#00ff41";
+  var bg = avg>0.7?"rgba(255,51,51,.06)":avg>=0.4?"rgba(255,170,0,.06)":"rgba(0,255,65,.06)";
+  var sv = stressMap[emotion]||0.5;
+  if(sv>0.75){consecutiveHighStress++;if(consecutiveHighStress>=3){showToast("HIGH STRESS DETECTED","yellow");consecutiveHighStress=0;}}
+  else{consecutiveHighStress=0;}
   if(stressChart){
-    stressChart.data.labels = stressHistory.map(function(_,i){ return i+1; });
-    stressChart.data.datasets[0].data = values;
-    stressChart.data.datasets[0].borderColor = lineColor;
-    stressChart.data.datasets[0].backgroundColor = bgColor;
+    stressChart.data.labels=stressHistory.map(function(_,i){return i+1;});
+    stressChart.data.datasets[0].data=values;
+    stressChart.data.datasets[0].borderColor=lc;
+    stressChart.data.datasets[0].backgroundColor=bg;
     stressChart.update("none");
   }
 }
 
-/* ── Agent actions panel ───────────────────────────────── */
+/* ── Momentum chart ────────────────────────────────────── */
+function initMomentumChart(){
+  momentumInitialized = true;
+  momentumChart = new Chart(document.getElementById("momentumChart").getContext("2d"), {
+    type:"line",
+    data:{labels:powerHistory.map(function(_,i){return i+1;}),
+      datasets:[{data:powerHistory,borderColor:"#00ff41",
+        backgroundColor:"rgba(0,255,65,.06)",borderWidth:2,pointRadius:3,
+        pointBackgroundColor:"#00cc33",tension:0.4,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{display:false},y:{min:0,max:100,display:true,
+        ticks:{color:"#444",font:{size:9,family:"JetBrains Mono"},stepSize:25},
+        grid:{color:"rgba(0,255,65,.03)"}}},animation:{duration:400}}
+  });
+}
+
+function updateMomentum(score){
+  powerHistory.push(score);
+  if(powerHistory.length>12) powerHistory.shift();
+  if(momentumChart){
+    momentumChart.data.labels=powerHistory.map(function(_,i){return i+1;});
+    momentumChart.data.datasets[0].data=powerHistory;
+    var avg=powerHistory.reduce(function(a,b){return a+b;},0)/powerHistory.length;
+    var c=avg>60?"#00ff41":avg<40?"#ff3333":"#00cc33";
+    momentumChart.data.datasets[0].borderColor=c;
+    momentumChart.data.datasets[0].pointBackgroundColor=c;
+    momentumChart.update("none");
+  }
+}
+
+/* ── Power balance ─────────────────────────────────────── */
+function updatePowerBalance(score){
+  $powerScore.textContent = score;
+  $powerIndicator.style.left = score + "%";
+  var circ = 213.6;
+  var offset = circ - (score/100)*circ;
+  $scoreRingFill.style.strokeDashoffset = offset;
+  $scoreRingFill.style.stroke = score>60?"#00ff41":score<40?"#ff3333":"#00cc33";
+  $scoreRingText.textContent = score;
+  if(score>70) $scoreRingDesc.textContent = "Strong position - press your advantage carefully";
+  else if(score>55) $scoreRingDesc.textContent = "Slight edge - maintain pressure";
+  else if(score>=45) $scoreRingDesc.textContent = "Balanced - look for openings";
+  else if(score>=30) $scoreRingDesc.textContent = "They have leverage - consider concessions";
+  else $scoreRingDesc.textContent = "Weak position - reframe or pause";
+  updateMomentum(score);
+}
+
+/* ── Whisper (typewriter) ──────────────────────────────── */
+function typeWhisper(text){
+  /* Push current to prev */
+  var currentText = $whisperText.textContent.replace(/\u200B/g,"").trim();
+  if(currentText){
+    prevWhispers.unshift(currentText);
+    if(prevWhispers.length>2) prevWhispers.pop();
+    $whisperPrev.textContent = prevWhispers.join("\n");
+  }
+  if(whisperTypeTimer) clearInterval(whisperTypeTimer);
+  $whisperText.innerHTML = "";
+  var i=0;
+  var span = document.createElement("span");
+  $whisperText.appendChild(span);
+  var cursor = document.createElement("span");
+  cursor.className = "whisper-cursor";
+  $whisperText.appendChild(cursor);
+  whisperTypeTimer = setInterval(function(){
+    if(i>=text.length){clearInterval(whisperTypeTimer);whisperTypeTimer=null;return;}
+    span.textContent += text[i++];
+  }, 25);
+}
+
+/* ── Agent actions ─────────────────────────────────────── */
 function addAgentAction(action, description){
-  var now = new Date();
-  var time = now.getHours().toString().padStart(2,"0") + ":"
-           + now.getMinutes().toString().padStart(2,"0");
-  agentActions.unshift({action:action, description:description, time:time});
-  if(agentActions.length > 3) agentActions.pop();
+  var now=new Date();
+  var time=now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0");
+  agentActions.unshift({action:action,description:description,time:time});
+  if(agentActions.length>3) agentActions.pop();
   renderAgentActions();
 }
 
 function renderAgentActions(){
-  $agentActionsList.innerHTML = "";
+  $agentActionsList.innerHTML="";
   if(!agentActions.length){
-    $agentActionsList.innerHTML = '<div class="aa-empty">Agent will act on events automatically...</div>';
+    $agentActionsList.innerHTML='<div class="aa-empty">> agent will act on events automatically...</div>';
     return;
   }
   agentActions.forEach(function(item){
-    var el = document.createElement("div");
-    el.className = "agent-action-item";
-    el.innerHTML =
-      '<div class="aa-icon">' + (actionIconMap[item.action] || "🤖") + '</div>' +
-      '<div class="aa-body">' +
-        '<div class="aa-type">' + (actionLabelMap[item.action] || item.action) + '</div>' +
-        '<div class="aa-desc">' + escapeHtml(item.description) + '</div>' +
-        '<div class="aa-time">' + item.time + '</div>' +
-      '</div>';
+    var el=document.createElement("div");
+    el.className="agent-action-item";
+    el.innerHTML='<div class="aa-icon">'+(actionIconMap[item.action]||"\uD83E\uDD16")+'</div>'+
+      '<div class="aa-body">'+
+        '<div class="aa-type">'+(actionLabelMap[item.action]||item.action)+'</div>'+
+        '<div class="aa-desc">'+escapeHtml(item.description)+'</div>'+
+        '<div class="aa-time">'+item.time+'</div></div>';
     $agentActionsList.appendChild(el);
   });
 }
 
-/* ── Cultural tip card ─────────────────────────────────── */
+/* ── Cultural tip ──────────────────────────────────────── */
 function showCulturalTip(data){
   if(culturalTipTimer) clearTimeout(culturalTipTimer);
-  document.getElementById("ctHeader").textContent = "🌐 Cultural Tip — " + (data.language || "");
-  document.getElementById("ctTip").textContent   = data.tip || "";
-  document.getElementById("ctDo").textContent    = "✅ Do: " + (data.do || "");
-  document.getElementById("ctAvoid").textContent = "❌ Avoid: " + (data.avoid || "");
-  $culturalTipCard.style.display = "block";
-  requestAnimationFrame(function(){
-    $culturalTipCard.classList.add("visible");
-  });
-  showToast("🌐 Cultural context loaded for " + (data.language || ""), "blue");
-  speak(data.tip || "");
-  addAgentAction("cultural_tip", (data.tip || "").slice(0,80));
-  culturalTipTimer = setTimeout(function(){
+  document.getElementById("ctHeader").textContent="[>] CULTURAL TIP - "+(data.language||"");
+  document.getElementById("ctTip").textContent=data.tip||"";
+  document.getElementById("ctDo").textContent="DO: "+(data["do"]||"");
+  document.getElementById("ctAvoid").textContent="AVOID: "+(data.avoid||"");
+  $culturalTipCard.style.display="block";
+  requestAnimationFrame(function(){$culturalTipCard.classList.add("visible");});
+  showToast("Cultural context loaded for "+(data.language||""),"blue");
+  speak(data.tip||"");
+  addAgentAction("cultural_tip",(data.tip||"").slice(0,80));
+  culturalTipTimer=setTimeout(function(){
     $culturalTipCard.classList.remove("visible");
-    setTimeout(function(){ $culturalTipCard.style.display = "none"; }, 400);
-  }, 15000);
+    setTimeout(function(){$culturalTipCard.style.display="none";},400);
+  },15000);
 }
 
-/* ── Emergency UI ──────────────────────────────────────── */
+/* ── Emergency ─────────────────────────────────────────── */
 function showEmergencyPanel(data){
-  document.getElementById("btnHospital").href = data.maps_hospital || "#";
-  document.getElementById("btnPolice").href   = data.maps_police || "#";
-
+  document.getElementById("btnHospital").href=data.maps_hospital||"#";
+  document.getElementById("btnPolice").href=data.maps_police||"#";
   $cameraWrap.classList.add("emergency");
   $emergencyOverlay.classList.add("visible");
   $emergencyPanel.classList.add("visible");
-
-  showToast("🚨 Distress detected — emergency resources ready", "red");
+  showToast("DISTRESS DETECTED - emergency resources ready","red");
   speak("Emergency resources are now available");
-  addAgentAction("emergency", "Distress detected: " + (data.situation || "").slice(0,60));
+  addAgentAction("emergency","Distress: "+(data.situation||"").slice(0,60));
 }
 
 function dismissEmergency(){
@@ -731,54 +910,45 @@ function dismissEmergency(){
 
 /* ── Meeting notes ─────────────────────────────────────── */
 function addMeetingNote(data){
-  var now = new Date();
-  var time = now.getHours().toString().padStart(2,"0") + ":"
-           + now.getMinutes().toString().padStart(2,"0");
-  meetingNotes.push({key_point: data.key_point || "", emotion: data.speaker_emotion || "", time: time});
-
-  // Remove placeholder
-  var empty = $meetingNotesList.querySelector(".aa-empty");
+  var now=new Date();
+  var time=now.getHours().toString().padStart(2,"0")+":"+now.getMinutes().toString().padStart(2,"0");
+  meetingNotes.push({key_point:data.key_point||"",emotion:data.speaker_emotion||"",time:time});
+  var empty=$meetingNotesList.querySelector(".hc-empty");
   if(empty) empty.remove();
-
-  var item = document.createElement("div");
-  item.className = "meeting-note-item";
-  item.innerHTML =
-    '<div class="mn-time">' + time + '</div>' +
-    '<div class="mn-emotion">' + escapeHtml(data.speaker_emotion || "") + '</div>' +
-    '<div class="mn-text">' + escapeHtml(data.key_point || "") + '</div>';
+  var item=document.createElement("div");
+  item.className="meeting-note-item";
+  item.innerHTML='<div class="mn-time">'+time+'</div>'+
+    '<div class="mn-emotion">'+escapeHtml(data.speaker_emotion||"")+'</div>'+
+    '<div class="mn-text">'+escapeHtml(data.key_point||"")+'</div>';
   $meetingNotesList.appendChild(item);
-  $meetingNotesList.scrollTop = $meetingNotesList.scrollHeight;
-
-  var preview = (data.key_point || "").slice(0, 50);
-  showToast("📋 Note saved: " + preview + (data.key_point && data.key_point.length > 50 ? "…" : ""), "green");
+  $meetingNotesList.scrollTop=$meetingNotesList.scrollHeight;
+  showToast("NOTE: "+(data.key_point||"").slice(0,50),"green");
   speak("Note saved");
-  addAgentAction("note_saved", preview);
+  addAgentAction("note_saved",(data.key_point||"").slice(0,50));
 }
 
 function exportNotes(){
-  if(!meetingNotes.length){ showToast("No notes to export", "default"); return; }
-  var lines = ["ToneLens Meeting Notes", "====================", ""];
-  meetingNotes.forEach(function(n, i){
-    lines.push((i+1) + ". [" + n.time + "] (" + n.emotion + ")");
-    lines.push("   " + n.key_point);
+  if(!meetingNotes.length){showToast("No notes to export","default");return;}
+  var lines=["ToneLens Meeting Notes","====================",""];
+  meetingNotes.forEach(function(n,i){
+    lines.push((i+1)+". ["+n.time+"] ("+n.emotion+")");
+    lines.push("   "+n.key_point);
     lines.push("");
   });
-  var blob = new Blob([lines.join("\n")], {type:"text/plain"});
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "meeting-notes-" + new Date().toISOString().slice(0,10) + ".txt";
-  a.click();
-  URL.revokeObjectURL(a.href);
+  var blob=new Blob([lines.join("\n")],{type:"text/plain"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="meeting-notes-"+new Date().toISOString().slice(0,10)+".txt";
+  a.click(); URL.revokeObjectURL(a.href);
 }
 
-/* ── Stress report from agent ──────────────────────────── */
+/* ── Stress report ─────────────────────────────────────── */
 function showStressReport(data){
-  var avgPct = Math.round((data.average_stress || 0) * 100);
-  var summary = "Stress " + avgPct + "% — " + (data.dominant_emotion || "calm") + ". " + (data.recommendation || "");
-  showToast("📊 " + summary, avgPct > 70 ? "red" : avgPct >= 40 ? "yellow" : "green");
-  speak("Stress report: " + (data.recommendation || ""));
-  addAgentAction("stress_report",
-    "Avg stress " + avgPct + "% — " + (data.dominant_emotion || "") + " over " + (data.total_exchanges || 0) + " exchanges");
+  var avgPct=Math.round((data.average_stress||0)*100);
+  showToast("STRESS "+avgPct+"% - "+(data.dominant_emotion||"calm")+". "+(data.recommendation||""),
+    avgPct>70?"red":avgPct>=40?"yellow":"green");
+  speak("Stress report: "+(data.recommendation||""));
+  addAgentAction("stress_report","Avg "+avgPct+"% - "+(data.dominant_emotion||""));
 }
 
 /* ── handleMessage ─────────────────────────────────────── */
@@ -788,203 +958,220 @@ function handleMessage(msg){
     case "emotion":      onEmotion(msg);      break;
     case "subtext":      onSubtext(msg);      break;
     case "suggestion":   onSuggestion(msg);   break;
+    case "power":        onPower(msg);        break;
     case "transcript":   onTranscript(msg);   break;
     case "audio":        onAudio(msg);        break;
-    case "text":         parseResponse(msg.text || ""); break;
+    case "text":         parseResponse(msg.text||""); break;
     case "agent_action": onAgentAction(msg);  break;
-    case "error":        showToast(msg.msg || "Unknown error", "red"); break;
+    case "error":        showToast(msg.msg||"Unknown error","red"); break;
   }
 }
 
 function onAgentAction(msg){
-  var action = msg.action;
-  var data   = msg.data || {};
-  switch(action){
-    case "cultural_tip":  showCulturalTip(data);    break;
-    case "emergency":     showEmergencyPanel(data);  break;
-    case "note_saved":    addMeetingNote(data);      break;
-    case "stress_report": showStressReport(data);    break;
+  switch(msg.action){
+    case "cultural_tip":  showCulturalTip(msg.data||{});   break;
+    case "emergency":     showEmergencyPanel(msg.data||{}); break;
+    case "note_saved":    addMeetingNote(msg.data||{});     break;
+    case "stress_report": showStressReport(msg.data||{});   break;
   }
 }
 
 /* ── Structured response parser ────────────────────────── */
 function parseResponse(text){
   if(!text) return;
-  var lines = text.split("\n");
-  var exchange = {};
-  var structuredFound = false;
+  var lines=text.split("\n");
+  var exchange={};
+  var structuredFound=false;
   lines.forEach(function(line){
-    line = line.trim();
-    if(!line) return;
-    var lower = line.toLowerCase();
+    line=line.trim(); if(!line) return;
+    var lower=line.toLowerCase();
     if(lower.startsWith("translation:")){
-      structuredFound = true;
-      var content = line.slice(line.indexOf(":")+1).trim();
-      typeText($translationText, content);
-      exchange.translation = content;
+      structuredFound=true;
+      var c=line.slice(line.indexOf(":")+1).trim();
+      typeText($translationText,c); exchange.translation=c;
     } else if(lower.startsWith("emotion:")){
-      structuredFound = true;
-      var content = line.slice(line.indexOf(":")+1).trim();
-      var match = content.match(/^([\w]+)\s*[-\u2013]\s*(\d+)%?/);
-      var label = match ? match[1].toLowerCase() : content.toLowerCase().replace(/[^a-z]/g,"");
-      var conf  = match ? parseInt(match[2],10) : 70;
-      $emoIcon.textContent = emojiMap[label] || "\uD83D\uDE0C";
-      $emoLabel.textContent = label;
-      $emoLabel.style.color = colorMap[label] || "#f1f5f9";
-      $emoConf.textContent  = conf + "%";
+      structuredFound=true;
+      var c2=line.slice(line.indexOf(":")+1).trim();
+      var m=c2.match(/^([\w]+)\s*[-\u2013]\s*(\d+)%?/);
+      var label=m?m[1].toLowerCase():c2.toLowerCase().replace(/[^a-z]/g,"");
+      var conf=m?parseInt(m[2],10):70;
+      $emoIcon.textContent=emojiMap[label]||"\uD83D\uDE0C";
+      $emoLabel.textContent=label;
+      $emoLabel.style.color=colorMap[label]||"#fff";
+      $emoConf.textContent=conf+"%";
       $emotionBadge.classList.remove("visible");
       void $emotionBadge.offsetWidth;
       $emotionBadge.classList.add("visible");
-      updateEmotionMeter(label, conf);
+      updateEmotionMeter(label,conf);
       updateStressTracker(label);
-      exchange.emotion = label;
-      exchange.emotionConf = conf;
+      exchange.emotion=label; exchange.emotionConf=conf;
     } else if(lower.startsWith("subtext:")){
-      structuredFound = true;
-      var content = line.slice(line.indexOf(":")+1).trim();
-      $subtextText.style.opacity = "0";
+      structuredFound=true;
+      var c3=line.slice(line.indexOf(":")+1).trim();
+      $subtextText.style.opacity="0";
       setTimeout(function(){
-        $subtextText.textContent = content;
-        $subtextText.className = "card-body slide-in";
-        $subtextText.style.opacity = "1";
-      }, 150);
-      exchange.subtext = content;
+        $subtextText.textContent=c3;
+        $subtextText.className="card-body slide-in";
+        $subtextText.style.opacity="1";
+      },150);
+      exchange.subtext=c3;
+    } else if(lower.startsWith("power:")){
+      structuredFound=true;
+      var c4=line.slice(line.indexOf(":")+1).trim();
+      var pm=c4.match(/(\d+)/);
+      if(pm) updatePowerBalance(Math.max(0,Math.min(100,parseInt(pm[1],10))));
     } else if(lower.startsWith("suggest:")){
-      structuredFound = true;
-      var content = line.slice(line.indexOf(":")+1).trim();
-      $suggestionText.textContent = content;
-      $suggestionText.className = "card-body slide-up";
+      structuredFound=true;
+      var c5=line.slice(line.indexOf(":")+1).trim();
+      $suggestionText.textContent=c5;
+      $suggestionText.className="card-body slide-in";
       $suggestionCard.classList.remove("suggestion-glow");
       void $suggestionCard.offsetWidth;
       $suggestionCard.classList.add("suggestion-glow");
-      exchange.suggestion = content;
+      if(currentMode==="negotiate") typeWhisper(c5);
+      exchange.suggestion=c5;
     }
   });
   if(!structuredFound){
-    var p = document.createElement("p");
-    p.textContent = text.trim();
+    var p=document.createElement("p");
+    p.textContent=text.trim();
     $transcriptText.appendChild(p);
-    $transcriptText.scrollTop = $transcriptText.scrollHeight;
+    $transcriptText.scrollTop=$transcriptText.scrollHeight;
   }
   logToHistory(exchange);
 }
 
 /* ── Typing effect ─────────────────────────────────────── */
-let typeTimer = null;
-function typeText(el, text, speed){
-  speed = speed || 30;
+var typeTimer = null;
+function typeText(el,text,speed){
+  speed=speed||30;
   if(typeTimer) clearInterval(typeTimer);
-  el.textContent = "";
-  var i = 0;
-  typeTimer = setInterval(function(){
-    if(i >= text.length){ clearInterval(typeTimer); typeTimer = null; return; }
-    el.textContent += text[i++];
-  }, speed);
+  el.textContent=""; var i=0;
+  typeTimer=setInterval(function(){
+    if(i>=text.length){clearInterval(typeTimer);typeTimer=null;return;}
+    el.textContent+=text[i++];
+  },speed);
 }
 
-/* ── Individual message handlers ──────────────────────── */
+/* ── Message handlers ──────────────────────────────────── */
 function onTranslation(msg){
-  if(msg.source_language && msg.source_language !== "Unknown"){
-    $langBadge.textContent = msg.source_language;
-    $langBadge.style.display = "inline-block";
-  } else {
-    $langBadge.style.display = "none";
-  }
-  typeText($translationText, msg.text || "");
+  if(msg.source_language && msg.source_language!=="Unknown"){
+    $langBadge.textContent=msg.source_language;$langBadge.style.display="inline-block";
+  } else {$langBadge.style.display="none";}
+  typeText($translationText,msg.text||"");
 }
-
 function onEmotion(msg){
-  var label = msg.label || "calm";
-  var conf  = Math.round((msg.confidence || 0.7) * 100);
-  $emoIcon.textContent = emojiMap[label] || "😌";
-  $emoLabel.textContent = label;
-  $emoLabel.style.color = colorMap[label] || "#f1f5f9";
-  $emoConf.textContent  = conf + "%";
+  var label=msg.label||"calm";
+  var conf=Math.round((msg.confidence||0.7)*100);
+  $emoIcon.textContent=emojiMap[label]||"\uD83D\uDE0C";
+  $emoLabel.textContent=label;
+  $emoLabel.style.color=colorMap[label]||"#fff";
+  $emoConf.textContent=conf+"%";
   $emotionBadge.classList.remove("visible");
   void $emotionBadge.offsetWidth;
   $emotionBadge.classList.add("visible");
-  updateEmotionMeter(label, conf);
+  updateEmotionMeter(label,conf);
   updateStressTracker(label);
 }
-
 function onSubtext(msg){
-  $subtextText.style.opacity = "0";
+  $subtextText.style.opacity="0";
   setTimeout(function(){
-    $subtextText.textContent = msg.text || "";
-    $subtextText.className = "card-body slide-in";
-    $subtextText.style.opacity = "1";
-  }, 200);
+    $subtextText.textContent=msg.text||"";
+    $subtextText.className="card-body slide-in";
+    $subtextText.style.opacity="1";
+  },200);
 }
-
 function onSuggestion(msg){
-  $suggestionText.textContent = msg.text || "";
-  $suggestionText.className = "card-body slide-up";
+  $suggestionText.textContent=msg.text||"";
+  $suggestionText.className="card-body slide-in";
   $suggestionCard.classList.remove("suggestion-glow");
   void $suggestionCard.offsetWidth;
   $suggestionCard.classList.add("suggestion-glow");
+  if(currentMode==="negotiate") typeWhisper(msg.text||"");
 }
-
+function onPower(msg){
+  if(typeof msg.score==="number") updatePowerBalance(Math.max(0,Math.min(100,msg.score)));
+}
 function onTranscript(msg){
   if(!msg.text) return;
-  var p = document.createElement("p");
-  p.textContent = msg.text;
+  var p=document.createElement("p"); p.textContent=msg.text;
   $transcriptText.appendChild(p);
-  $transcriptText.scrollTop = $transcriptText.scrollHeight;
+  $transcriptText.scrollTop=$transcriptText.scrollHeight;
 }
-
 function onAudio(msg){
   if(!msg.data) return;
   try{
-    if(!playbackCtx) playbackCtx = new AudioContext({sampleRate:24000});
-    if(playbackCtx.state === "suspended") playbackCtx.resume();
-    var raw = atob(msg.data);
-    var bytes = new Uint8Array(raw.length);
-    for(var i=0;i<raw.length;i++) bytes[i] = raw.charCodeAt(i);
-    var int16 = new Int16Array(bytes.buffer);
-    var float32 = new Float32Array(int16.length);
-    for(var j=0;j<int16.length;j++) float32[j] = int16[j] / 32768.0;
-    var buf = playbackCtx.createBuffer(1, float32.length, 24000);
-    buf.copyToChannel(float32, 0);
-    var src = playbackCtx.createBufferSource();
-    src.buffer = buf;
-    src.connect(playbackCtx.destination);
-    var now = playbackCtx.currentTime;
-    if(nextPlayTime < now) nextPlayTime = now;
-    src.start(nextPlayTime);
-    nextPlayTime += buf.duration;
-    $speakerIcon.textContent = "\uD83D\uDD0A";
+    if(!playbackCtx) playbackCtx=new AudioContext({sampleRate:24000});
+    if(playbackCtx.state==="suspended") playbackCtx.resume();
+    var raw=atob(msg.data);
+    var bytes=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+    var int16=new Int16Array(bytes.buffer);
+    var float32=new Float32Array(int16.length);
+    for(var j=0;j<int16.length;j++) float32[j]=int16[j]/32768.0;
+    var buf=playbackCtx.createBuffer(1,float32.length,24000);
+    buf.copyToChannel(float32,0);
+    var src=playbackCtx.createBufferSource();
+    src.buffer=buf; src.connect(playbackCtx.destination);
+    var now2=playbackCtx.currentTime;
+    if(nextPlayTime<now2) nextPlayTime=now2;
+    src.start(nextPlayTime); nextPlayTime+=buf.duration;
+    $speakerIcon.textContent="\uD83D\uDD0A";
     $speakerIcon.classList.add("speaking");
     clearTimeout(speakerTimer);
-    speakerTimer = setTimeout(function(){
+    speakerTimer=setTimeout(function(){
       $speakerIcon.classList.remove("speaking");
-      $speakerIcon.textContent = "\uD83D\uDD08";
-    }, Math.max(500, buf.duration * 1000 + 300));
-  } catch(e){ console.warn("Audio playback error", e); }
+      $speakerIcon.textContent="\uD83D\uDD08";
+    },Math.max(500,buf.duration*1000+300));
+  } catch(e){console.warn("Audio playback error",e);}
 }
 
 /* ── History ────────────────────────────────────────────── */
 function logToHistory(exchange){
-  if(!exchange || (!exchange.emotion && !exchange.subtext && !exchange.translation)) return;
-  var now = new Date();
-  var time = now.getHours().toString().padStart(2,"0") + ":"
-           + now.getMinutes().toString().padStart(2,"0") + ":"
-           + now.getSeconds().toString().padStart(2,"0");
-  exchangeHistory.unshift({time:time, emotion:exchange.emotion||"", subtext:exchange.subtext||exchange.translation||""});
-  if(exchangeHistory.length > 10) exchangeHistory.pop();
+  if(!exchange||(!exchange.emotion&&!exchange.subtext&&!exchange.translation)) return;
+  var now=new Date();
+  var time=now.getHours().toString().padStart(2,"0")+":"+
+    now.getMinutes().toString().padStart(2,"0")+":"+
+    now.getSeconds().toString().padStart(2,"0");
+  exchangeHistory.unshift({time:time,emotion:exchange.emotion||"",subtext:exchange.subtext||exchange.translation||""});
+  if(exchangeHistory.length>10) exchangeHistory.pop();
   renderHistory();
 }
 
 function renderHistory(){
-  $historyList.innerHTML = "";
+  $historyList.innerHTML="";
+  if(!exchangeHistory.length){
+    $historyList.innerHTML='<div class="hc-empty">> no_history_found. start a conversation.</div>';
+    return;
+  }
   exchangeHistory.forEach(function(item){
-    var card = document.createElement("div");
-    card.className = "history-card";
-    card.innerHTML =
-      '<div class="hc-time">' + item.time + '</div>' +
-      '<div class="hc-emotion">' + (emojiMap[item.emotion]||"") + " " + item.emotion + '</div>' +
-      '<div class="hc-subtext">' + escapeHtml(item.subtext) + '</div>';
+    var card=document.createElement("div");
+    card.className="history-card";
+    card.innerHTML='<div class="hc-time">['+item.time+']</div>'+
+      '<div class="hc-emotion">'+(emojiMap[item.emotion]||"")+" "+item.emotion+'</div>'+
+      '<div class="hc-subtext">'+escapeHtml(item.subtext)+'</div>';
     $historyList.appendChild(card);
   });
+}
+
+/* ── Fetch history on connect ──────────────────────────── */
+async function fetchHistory(){
+  try{
+    var resp = await fetch("/api/history/"+encodeURIComponent(sessionId));
+    if(!resp.ok) return;
+    var data = await resp.json();
+    if(data.exchanges && data.exchanges.length){
+      data.exchanges.reverse().forEach(function(ex){
+        exchangeHistory.push({
+          time: (ex.timestamp||"").slice(11,19)||"--:--:--",
+          emotion: ex.emotion||"",
+          subtext: ex.subtext||ex.translation||""
+        });
+      });
+      if(exchangeHistory.length>10) exchangeHistory.length=10;
+      renderHistory();
+    }
+  } catch(e){/* ignore */}
 }
 
 /* ── Utility ────────────────────────────────────────────── */
@@ -994,256 +1181,234 @@ function escapeHtml(s){
 
 /* ── WebSocket ──────────────────────────────────────────── */
 function wsUrl(){
-  var proto = location.protocol === "https:" ? "wss:" : "ws:";
-  var host  = location.hostname === "localhost" ? "localhost:8080" : location.host;
-  return proto + "//" + host + "/ws/" + sessionId;
+  var proto=location.protocol==="https:"?"wss:":"ws:";
+  var host=location.hostname==="localhost"?"localhost:8080":location.host;
+  return proto+"//"+host+"/ws/"+sessionId;
 }
 
 function connectWS(){
-  if(ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+  if(ws && (ws.readyState===WebSocket.OPEN||ws.readyState===WebSocket.CONNECTING)) return;
   setStatus("reconnecting");
   ws = new WebSocket(wsUrl());
-
-  ws.onopen = function(){
+  ws.onopen=function(){
     setStatus("connected");
     hideBanner();
-    clearInterval(reconnectTimer);
-    reconnectTimer = null;
-    ws.send(JSON.stringify({type:"mode", mode:currentMode}));
-    // Send location if already obtained
-    if(userLat !== 0 || userLng !== 0){
-      ws.send(JSON.stringify({type:"location", lat:userLat, lng:userLng}));
-    }
-    hideLoading();
+    clearInterval(reconnectTimer); reconnectTimer=null;
+    ws.send(JSON.stringify({type:"mode",mode:currentMode}));
+    if(userLat||userLng) ws.send(JSON.stringify({type:"location",lat:userLat,lng:userLng}));
+    fetchHistory();
   };
-
-  ws.onmessage = function(ev){
-    try{ handleMessage(JSON.parse(ev.data)); }
-    catch(e){ console.warn("Bad WS message", e); }
+  ws.onmessage=function(ev){
+    try{handleMessage(JSON.parse(ev.data));}catch(e){console.warn("Bad WS msg",e);}
   };
-
-  ws.onclose = function(){
-    setStatus("disconnected");
-    scheduleReconnect();
-  };
-
-  ws.onerror = function(){
-    setStatus("disconnected");
-  };
+  ws.onclose=function(){setStatus("disconnected");scheduleReconnect();};
+  ws.onerror=function(){setStatus("disconnected");};
 }
 
 function send(obj){
-  if(ws && ws.readyState === WebSocket.OPEN){
-    ws.send(JSON.stringify(obj));
-  }
+  if(ws && ws.readyState===WebSocket.OPEN) ws.send(JSON.stringify(obj));
 }
 
 function scheduleReconnect(){
   if(reconnectTimer) return;
-  reconnectCountdown = 3;
-  showBanner("Connection lost. Reconnecting in " + reconnectCountdown + "s...");
-  reconnectTimer = setInterval(function(){
+  reconnectCountdown=3;
+  showBanner("Connection lost. Reconnecting in "+reconnectCountdown+"s...");
+  reconnectTimer=setInterval(function(){
     reconnectCountdown--;
-    if(reconnectCountdown <= 0){
-      clearInterval(reconnectTimer); reconnectTimer = null;
-      hideBanner(); connectWS();
-    } else {
-      showBanner("Connection lost. Reconnecting in " + reconnectCountdown + "s...");
-    }
-  }, 1000);
+    if(reconnectCountdown<=0){clearInterval(reconnectTimer);reconnectTimer=null;hideBanner();connectWS();}
+    else showBanner("Connection lost. Reconnecting in "+reconnectCountdown+"s...");
+  },1000);
 }
 
 function setStatus(s){
-  $statusDot.className = "status-dot " + (s==="connected"?"connected":s==="reconnecting"?"reconnecting":"");
+  $connDot.className="conn-dot "+(s==="connected"?"connected":s==="reconnecting"?"reconnecting":"");
+  $connLabel.textContent=s==="connected"?"CONNECTED":s==="reconnecting"?"RECONNECTING...":"OFFLINE";
 }
-function showBanner(msg){ $connBanner.textContent = msg; $connBanner.classList.add("visible"); }
-function hideBanner(){ $connBanner.classList.remove("visible"); }
+function showBanner(msg){$connBanner.textContent=msg;$connBanner.classList.add("visible");}
+function hideBanner(){$connBanner.classList.remove("visible");}
 
 /* ── Camera ─────────────────────────────────────────────── */
 async function startCamera(){
   try{
-    videoStream = await navigator.mediaDevices.getUserMedia({
+    videoStream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:"environment",width:{ideal:640},height:{ideal:480}},audio:false
     });
-    $video.srcObject = videoStream;
-    $video.style.display = "block";
-    $cameraError.style.display = "none";
+    $video.srcObject=videoStream;
+    $video.style.display="block";
+    $cameraError.style.display="none";
     $cameraWrap.classList.add("live");
     startFrameCapture();
   } catch(e){
-    console.error("Camera error:", e);
-    $video.style.display = "none";
-    $cameraError.style.display = "flex";
+    console.error("Camera error:",e);
+    $video.style.display="none";
+    $cameraError.style.display="flex";
   }
 }
 
 async function startScreenCapture(){
   try{
-    screenStream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-    if(videoStream){ videoStream.getTracks().forEach(function(t){t.stop();}); videoStream = null; }
-    videoStream = screenStream;
-    $video.srcObject = screenStream;
-    $video.style.display = "block";
-    $cameraError.style.display = "none";
+    screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+    if(videoStream){videoStream.getTracks().forEach(function(t){t.stop();});videoStream=null;}
+    videoStream=screenStream;
+    $video.srcObject=screenStream;
+    $video.style.display="block";
+    $cameraError.style.display="none";
     $cameraWrap.classList.add("live");
     startFrameCapture();
-    var audioTracks = screenStream.getAudioTracks();
-    if(audioTracks.length > 0){ stopAudio(); startAudioFromStream(screenStream); }
+    var at=screenStream.getAudioTracks();
+    if(at.length>0){stopAudio();startAudioFromStream(screenStream);}
     $consentBanner.classList.add("visible");
-    // Show meeting notes sidebar
     $meetingSidebar.classList.add("open");
-    screenStream.getVideoTracks()[0].addEventListener("ended", function(){
+    screenStream.getVideoTracks()[0].addEventListener("ended",function(){
       $consentBanner.classList.remove("visible");
       $meetingSidebar.classList.remove("open");
-      screenStream = null; videoStream = null;
+      screenStream=null;videoStream=null;
       startCamera();
     });
   } catch(e){
-    console.error("Screen capture error:", e);
-    showToast("Screen capture cancelled or unavailable", "default");
+    console.error("Screen capture error:",e);
+    showToast("Screen capture cancelled or unavailable","default");
   }
 }
 
 function startFrameCapture(){
   if(frameInterval) clearInterval(frameInterval);
-  var ctx = $canvas.getContext("2d");
-  $canvas.width = 640; $canvas.height = 480;
-  frameInterval = setInterval(function(){
-    if(!videoStream || !ws || ws.readyState !== WebSocket.OPEN) return;
-    ctx.drawImage($video, 0, 0, 640, 480);
-    var dataUrl = $canvas.toDataURL("image/jpeg", 0.7);
-    send({type:"frame", data:dataUrl.split(",")[1]});
-  }, 2000);
+  var ctx2=$canvas.getContext("2d");
+  $canvas.width=640;$canvas.height=480;
+  frameInterval=setInterval(function(){
+    if(!videoStream||!ws||ws.readyState!==WebSocket.OPEN) return;
+    ctx2.drawImage($video,0,0,640,480);
+    var dataUrl=$canvas.toDataURL("image/jpeg",0.7);
+    send({type:"frame",data:dataUrl.split(",")[1]});
+  },2000);
 }
 
-$retryCamera.addEventListener("click", startCamera);
+$retryCamera.addEventListener("click",startCamera);
 
-/* ── Audio capture ──────────────────────────────────────── */
+/* ── Audio ──────────────────────────────────────────────── */
 function startAudioFromStream(stream){
   try{
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:16000});
-    var actualRate = audioCtx.sampleRate;
-    var source = audioCtx.createMediaStreamSource(stream);
-    analyser = audioCtx.createAnalyser(); analyser.fftSize = 32;
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+    var actualRate=audioCtx.sampleRate;
+    var source=audioCtx.createMediaStreamSource(stream);
+    analyser=audioCtx.createAnalyser();analyser.fftSize=32;
     source.connect(analyser);
-    processor = audioCtx.createScriptProcessor(4096,1,1);
-    analyser.connect(processor); processor.connect(audioCtx.destination);
-    isListening = true;
-    $micBtn.classList.add("listening");
-    $micStatus.textContent = "Screen audio...";
+    processor=audioCtx.createScriptProcessor(4096,1,1);
+    analyser.connect(processor);processor.connect(audioCtx.destination);
+    isListening=true;$micBtn.classList.add("listening");
+    $micStatus.textContent="> screen_audio...";
     resetNoAudioTimer();
-    processor.onaudioprocess = function(e){
+    processor.onaudioprocess=function(e){
       if(!isListening) return;
-      var float32 = e.inputBuffer.getChannelData(0);
-      var samples = actualRate !== 16000 ? downsample(float32, actualRate, 16000) : float32;
-      var int16 = new Int16Array(samples.length);
-      for(var i=0;i<samples.length;i++){ var s=Math.max(-1,Math.min(1,samples[i])); int16[i]=s<0?s*0x8000:s*0x7FFF; }
-      send({type:"audio", data:arrayBufferToBase64(int16.buffer)});
+      var f=e.inputBuffer.getChannelData(0);
+      var samples=actualRate!==16000?downsample(f,actualRate,16000):f;
+      var int16=new Int16Array(samples.length);
+      for(var k=0;k<samples.length;k++){var s=Math.max(-1,Math.min(1,samples[k]));int16[k]=s<0?s*0x8000:s*0x7FFF;}
+      send({type:"audio",data:arrayBufferToBase64(int16.buffer)});
       resetNoAudioTimer();
     };
     updateWaveform();
-  } catch(e){ console.error("Stream audio error:", e); }
+  } catch(e){console.error("Stream audio error:",e);}
 }
 
 async function startAudio(){
   try{
-    micStream = await navigator.mediaDevices.getUserMedia({audio:true});
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:16000});
-    var actualRate = audioCtx.sampleRate;
-    var source = audioCtx.createMediaStreamSource(micStream);
-    analyser = audioCtx.createAnalyser(); analyser.fftSize = 32;
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+    var actualRate=audioCtx.sampleRate;
+    var source=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();analyser.fftSize=32;
     source.connect(analyser);
-    processor = audioCtx.createScriptProcessor(4096,1,1);
-    analyser.connect(processor); processor.connect(audioCtx.destination);
-    isListening = true;
-    $micBtn.classList.add("listening");
-    $micStatus.textContent = "Listening...";
+    processor=audioCtx.createScriptProcessor(4096,1,1);
+    analyser.connect(processor);processor.connect(audioCtx.destination);
+    isListening=true;$micBtn.classList.add("listening");
+    $micStatus.textContent="> listening...";
     resetNoAudioTimer();
-    processor.onaudioprocess = function(e){
+    processor.onaudioprocess=function(e){
       if(!isListening) return;
-      var float32 = e.inputBuffer.getChannelData(0);
-      var samples = actualRate !== 16000 ? downsample(float32, actualRate, 16000) : float32;
-      var int16 = new Int16Array(samples.length);
-      for(var i=0;i<samples.length;i++){ var s=Math.max(-1,Math.min(1,samples[i])); int16[i]=s<0?s*0x8000:s*0x7FFF; }
-      send({type:"audio", data:arrayBufferToBase64(int16.buffer)});
+      var f=e.inputBuffer.getChannelData(0);
+      var samples=actualRate!==16000?downsample(f,actualRate,16000):f;
+      var int16=new Int16Array(samples.length);
+      for(var k=0;k<samples.length;k++){var s=Math.max(-1,Math.min(1,samples[k]));int16[k]=s<0?s*0x8000:s*0x7FFF;}
+      send({type:"audio",data:arrayBufferToBase64(int16.buffer)});
       resetNoAudioTimer();
     };
     updateWaveform();
   } catch(e){
-    console.error("Mic error:", e);
-    $micStatus.textContent = "Mic unavailable";
+    console.error("Mic error:",e);
+    $micStatus.textContent="> mic_unavailable";
   }
 }
 
-function downsample(buffer, fromRate, toRate){
-  var ratio = fromRate / toRate;
-  var newLen = Math.round(buffer.length / ratio);
-  var result = new Float32Array(newLen);
-  for(var i=0;i<newLen;i++) result[i] = buffer[Math.round(i * ratio)];
+function downsample(buffer,fromRate,toRate){
+  var ratio=fromRate/toRate;
+  var newLen=Math.round(buffer.length/ratio);
+  var result=new Float32Array(newLen);
+  for(var k=0;k<newLen;k++) result[k]=buffer[Math.round(k*ratio)];
   return result;
 }
 
 function arrayBufferToBase64(buf){
-  var bytes = new Uint8Array(buf);
-  var binary = "";
-  for(var i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]);
+  var bytes=new Uint8Array(buf);
+  var binary="";
+  for(var k=0;k<bytes.length;k++) binary+=String.fromCharCode(bytes[k]);
   return btoa(binary);
 }
 
 function stopAudio(){
-  isListening = false;
-  if(processor){ processor.disconnect(); processor = null; }
-  if(audioCtx){ audioCtx.close().catch(function(){}); audioCtx = null; }
-  if(micStream){ micStream.getTracks().forEach(function(t){t.stop();}); micStream = null; }
+  isListening=false;
+  if(processor){processor.disconnect();processor=null;}
+  if(audioCtx){audioCtx.close().catch(function(){});audioCtx=null;}
+  if(micStream){micStream.getTracks().forEach(function(t){t.stop();});micStream=null;}
   $micBtn.classList.remove("listening");
-  $micStatus.textContent = "Ready";
-  bars.forEach(function(b){ b.style.height = "4px"; });
+  $micStatus.textContent="> ready";
+  bars.forEach(function(b){b.style.height="3px";});
 }
 
-$micBtn.addEventListener("click", function(){
-  if(isListening){ stopAudio(); } else { startAudio(); }
+$micBtn.addEventListener("click",function(){
+  if(isListening) stopAudio(); else startAudio();
 });
 
 function updateWaveform(){
-  if(!analyser || !isListening) return;
-  var data = new Uint8Array(analyser.frequencyBinCount);
+  if(!analyser||!isListening) return;
+  var data=new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(data);
-  for(var i=0;i<bars.length;i++){
-    var v = data[i*3] || 0;
-    bars[i].style.height = Math.max(4, v/255*30) + "px";
+  for(var k=0;k<bars.length;k++){
+    var v=data[k*3]||0;
+    bars[k].style.height=Math.max(3,v/255*26)+"px";
   }
   requestAnimationFrame(updateWaveform);
 }
 
 function resetNoAudioTimer(){
   clearTimeout(noAudioTimer);
-  $micBtn.style.boxShadow = "none";
-  noAudioTimer = setTimeout(function(){
-    if(isListening) $micBtn.style.boxShadow = "0 0 0 4px rgba(99,102,241,.5)";
-  }, 15000);
+  $micBtn.style.boxShadow="";
+  noAudioTimer=setTimeout(function(){
+    if(isListening) $micBtn.style.boxShadow="0 0 0 3px rgba(0,255,65,.3)";
+  },15000);
 }
 
 /* ── Mode buttons ───────────────────────────────────────── */
 document.querySelectorAll(".mode-btn[data-mode]").forEach(function(btn){
-  btn.addEventListener("click", async function(){
-    var newMode = btn.dataset.mode;
-    if(newMode === currentMode) return;
+  btn.addEventListener("click",async function(){
+    var newMode=btn.dataset.mode;
+    if(newMode===currentMode) return;
     document.querySelectorAll(".mode-btn[data-mode]").forEach(function(b){b.classList.remove("active");});
     btn.classList.add("active");
-    currentMode = newMode;
-    send({type:"mode", mode:currentMode});
+    currentMode=newMode;
+    send({type:"mode",mode:currentMode});
     applyModeLabels(currentMode);
-    if(newMode === "meeting"){
-      if(frameInterval){ clearInterval(frameInterval); frameInterval = null; }
-      if(videoStream){ videoStream.getTracks().forEach(function(t){t.stop();}); videoStream = null; }
+    if(newMode==="meeting"){
+      if(frameInterval){clearInterval(frameInterval);frameInterval=null;}
+      if(videoStream){videoStream.getTracks().forEach(function(t){t.stop();});videoStream=null;}
       stopAudio();
       await startScreenCapture();
     } else {
       $consentBanner.classList.remove("visible");
       $meetingSidebar.classList.remove("open");
-      if(screenStream){ screenStream.getTracks().forEach(function(t){t.stop();}); screenStream = null; }
-      if(frameInterval){ clearInterval(frameInterval); frameInterval = null; }
-      if(videoStream){ videoStream.getTracks().forEach(function(t){t.stop();}); videoStream = null; }
+      if(screenStream){screenStream.getTracks().forEach(function(t){t.stop();});screenStream=null;}
+      if(frameInterval){clearInterval(frameInterval);frameInterval=null;}
+      if(videoStream){videoStream.getTracks().forEach(function(t){t.stop();});videoStream=null;}
       stopAudio();
       await startCamera();
       await startAudio();
@@ -1251,11 +1416,55 @@ document.querySelectorAll(".mode-btn[data-mode]").forEach(function(btn){
   });
 });
 
-/* ── Loading ────────────────────────────────────────────── */
-function hideLoading(){
-  $loading.classList.add("hidden");
-  setTimeout(function(){ $loading.style.display = "none"; }, 600);
+/* ── Mock test ──────────────────────────────────────────── */
+if(location.hostname==="localhost"||location.hostname==="127.0.0.1"){
+  $mockTestBtn.style.display="inline-block";
 }
+
+$mockTestBtn.addEventListener("click",function(){
+  if($mockTestBtn.classList.contains("running")) return;
+  $mockTestBtn.classList.add("running");
+  $mockTestBtn.textContent="> running...";
+  showToast("Mock test started","blue");
+  var isNeg=currentMode==="negotiate";
+  var steps=[
+    function(){
+      handleMessage({type:"translation",text:"Bonjour, comment allez-vous aujourd'hui?",source_language:"French"});
+      handleMessage({type:"emotion",label:"confident",confidence:0.82,signals:[]});
+    },
+    function(){
+      handleMessage({type:"subtext",text:isNeg
+        ?"They are anchoring high to set the frame early"
+        :"The speaker is warm but testing your engagement level"});
+    },
+    function(){
+      if(isNeg) handleMessage({type:"power",score:35});
+      handleMessage({type:"suggestion",text:isNeg
+        ?"Counter with a lower anchor - don't accept their frame"
+        :"Mirror their warmth - respond in French if possible"});
+    },
+    function(){
+      handleMessage({type:"agent_action",action:"cultural_tip",
+        data:{tip:"In French business, starting with personal rapport is expected before negotiations.",
+          "do":"Reciprocate their greeting warmly",avoid:"Jumping straight to numbers",
+          language:"French"}});
+    },
+    function(){
+      if(isNeg){
+        handleMessage({type:"power",score:55});
+        handleMessage({type:"emotion",label:"nervous",confidence:0.73,signals:[]});
+        handleMessage({type:"suggestion",text:"Their nervousness shows your counter worked - press gently"});
+      } else {
+        handleMessage({type:"emotion",label:"happy",confidence:0.88,signals:[]});
+        handleMessage({type:"suggestion",text:"Great energy - maintain this positive dynamic"});
+      }
+      showToast("Mock test complete","green");
+      $mockTestBtn.classList.remove("running");
+      $mockTestBtn.textContent="\u26A1 Mock Test";
+    }
+  ];
+  steps.forEach(function(fn,idx){setTimeout(fn,(idx+1)*2500);});
+});
 
 /* ── Init ───────────────────────────────────────────────── */
 async function init(){

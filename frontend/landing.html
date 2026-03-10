@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ToneLens — Real-time Emotional Intelligence</title>
+<meta name="description" content="Google Translate tells you the words. ToneLens tells you the truth."/>
+<meta property="og:title" content="ToneLens — Real-time Emotional Intelligence"/>
+<meta property="og:description" content="Google Translate tells you the words. ToneLens tells you the truth."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' fill='%23000'><rect width='1200' height='630'/><text x='600' y='315' text-anchor='middle' fill='%2300ff41' font-size='80' font-family='monospace'>ToneLens</text></svg>"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%2300ff41'/></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::selection{background:#00ff41;color:#000}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#000;--surface:#0a0a0a;--border:#1a1a1a;
+  --green:#00ff41;--green2:#00cc33;--dim:#003311;
+  --text:#fff;--text2:#888;--text3:#444;
+  --danger:#ff3333;--warning:#ffaa00;
+  --glow:0 0 20px rgba(0,255,65,0.3);
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'Inter',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);
+  overflow-x:hidden;cursor:default}
+a{color:var(--green);text-decoration:none;cursor:pointer}
+a:hover{text-decoration:underline}
+
+/* Scanline overlay */
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,0.015) 2px,rgba(0,255,65,0.015) 4px)}
+
+/* Matrix canvas */
+#matrix-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.05}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;
+  justify-content:space-between;padding:14px 32px;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);transition:background .3s}
+nav.scrolled{background:rgba(0,0,0,0.95)}
+.nav-logo{font-family:var(--font-mono);font-size:1.15rem;font-weight:700;color:var(--green);
+  display:flex;align-items:center;gap:2px}
+.nav-cursor{display:inline-block;width:10px;height:18px;background:var(--green);
+  animation:blink .8s step-end infinite;margin-left:2px;vertical-align:middle}
+@keyframes blink{50%{opacity:0}}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:.85rem;color:var(--text2);transition:color .2s;font-weight:500;cursor:pointer}
+.nav-links a:hover{color:var(--green);text-decoration:none}
+.nav-cta{font-family:var(--font-mono);font-size:.82rem;padding:8px 20px;
+  border:1px solid var(--green);color:var(--green);background:transparent;
+  cursor:pointer;transition:all .25s;font-weight:600}
+.nav-cta:hover{background:var(--green);color:#000;box-shadow:var(--glow);text-decoration:none}
+
+/* ── Hero ───────────────────────────────────────────────── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:120px 24px 60px;position:relative;z-index:1;text-align:center}
+
+.terminal-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  width:100%;max-width:520px;margin-bottom:48px;text-align:left;overflow:hidden}
+.terminal-bar{display:flex;align-items:center;gap:6px;padding:10px 14px;
+  border-bottom:1px solid var(--border)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.terminal-bar span:nth-child(1){background:#ff5f57}
+.terminal-bar span:nth-child(2){background:#ffbd2e}
+.terminal-bar span:nth-child(3){background:#28ca42}
+.terminal-body{padding:16px;font-family:var(--font-mono);font-size:.82rem;
+  color:var(--green);line-height:1.8;min-height:120px}
+.terminal-body .line{opacity:0;transform:translateY(4px);transition:all .4s ease}
+.terminal-body .line.visible{opacity:1;transform:translateY(0)}
+.line-ok{color:var(--green)}
+.line-prompt{color:var(--text2)}
+
+.hero-h1{font-family:var(--font-mono);font-size:clamp(1.6rem,5vw,3.4rem);
+  font-weight:800;line-height:1.2;letter-spacing:-0.02em;margin-bottom:8px}
+.hero-h1-green{color:var(--green);text-shadow:var(--glow);
+  animation:glitch 3s infinite}
+@keyframes glitch{
+  0%,95%,100%{transform:none;opacity:1}
+  96%{transform:translate(-2px,1px);opacity:.8}
+  97%{transform:translate(2px,-1px);opacity:.9}
+  98%{transform:translate(-1px,-2px);opacity:.85}
+  99%{transform:none;opacity:1}
+}
+.hero-sub{color:var(--text2);font-size:clamp(.85rem,1.5vw,1.05rem);
+  max-width:580px;margin:20px auto 32px;line-height:1.7}
+.hero-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-filled{font-family:var(--font-mono);padding:12px 32px;font-size:.88rem;
+  background:var(--green);color:#000;border:1px solid var(--green);
+  font-weight:700;cursor:pointer;transition:all .25s}
+.btn-filled:hover{box-shadow:var(--glow);text-decoration:none}
+.btn-outline{font-family:var(--font-mono);padding:12px 32px;font-size:.88rem;
+  background:transparent;color:var(--green);border:1px solid var(--green);
+  font-weight:600;cursor:pointer;transition:all .25s}
+.btn-outline:hover{background:rgba(0,255,65,0.08);box-shadow:var(--glow);text-decoration:none}
+
+/* Floating cards */
+.floating-cards{display:flex;gap:16px;margin-top:40px;flex-wrap:wrap;justify-content:center}
+.float-card{background:var(--surface);border:1px solid var(--border);padding:12px 18px;
+  font-family:var(--font-mono);font-size:.78rem;color:var(--text2);
+  white-space:nowrap;animation:floatY 4s ease-in-out infinite}
+.float-card:nth-child(2){animation-delay:-1.3s;animation-duration:4.5s}
+.float-card:nth-child(3){animation-delay:-2.6s;animation-duration:3.8s}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* ── Stats bar ──────────────────────────────────────────── */
+.stats{display:flex;justify-content:center;gap:48px;padding:40px 24px;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  position:relative;z-index:1;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-num{font-family:var(--font-mono);font-size:2rem;font-weight:800;color:var(--green)}
+.stat-label{font-size:.78rem;color:var(--text3);margin-top:4px;text-transform:uppercase;
+  letter-spacing:.06em}
+
+/* ── Sections ───────────────────────────────────────────── */
+.section{padding:80px 24px;position:relative;z-index:1;max-width:1100px;margin:0 auto}
+.section-title{font-family:var(--font-mono);font-size:1.5rem;font-weight:700;
+  color:var(--green);margin-bottom:40px;text-align:center}
+
+/* Features grid */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.feature-card{background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid var(--green);padding:24px;transition:all .25s;
+  opacity:0;transform:translateX(20px)}
+.feature-card.visible{opacity:1;transform:translateX(0)}
+.feature-card:hover{border-color:rgba(0,255,65,0.3);box-shadow:0 0 20px rgba(0,255,65,0.05)}
+.fc-icon{font-family:var(--font-mono);font-size:.82rem;color:var(--green);font-weight:700;margin-bottom:8px}
+.fc-title{font-weight:700;font-size:1rem;margin-bottom:6px}
+.fc-desc{color:var(--text2);font-size:.88rem;line-height:1.6}
+
+/* How it works */
+.steps{display:flex;flex-direction:column;gap:24px;font-family:var(--font-mono);font-size:.85rem}
+.step-cmd{color:var(--text2);margin-bottom:4px;opacity:0;transform:translateX(20px)}
+.step-cmd.visible{opacity:1;transform:translateX(0)}
+.step-out{color:var(--green);padding-left:16px;border-left:2px solid var(--border);
+  margin-bottom:8px;line-height:1.7;opacity:0;transform:translateX(20px)}
+.step-out.visible{opacity:1;transform:translateX(0)}
+
+/* Architecture */
+.arch-box{background:var(--surface);border:1px solid var(--border);padding:28px;
+  overflow-x:auto;font-family:var(--font-mono);font-size:.78rem;color:var(--green);
+  line-height:1.7;white-space:pre}
+
+/* Demo section */
+.demo-wrap{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.demo-tabs{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.demo-tab{font-family:var(--font-mono);padding:10px 20px;background:transparent;
+  border:1px solid var(--border);color:var(--text2);cursor:pointer;
+  font-size:.82rem;transition:all .25s;text-align:left;font-weight:500}
+.demo-tab.active{border-color:var(--green);color:var(--green);background:var(--dim)}
+.demo-tab:hover{border-color:rgba(0,255,65,0.3)}
+.demo-screen{flex:1;min-width:280px;background:var(--surface);border:1px solid var(--border);
+  padding:20px;min-height:260px;font-family:var(--font-mono);font-size:.82rem;line-height:1.8}
+.demo-line{opacity:0;transform:translateY(6px);transition:all .4s ease}
+.demo-line.visible{opacity:1;transform:translateY(0)}
+.demo-line .lbl{color:var(--text3)}
+.demo-line .val{color:var(--green)}
+.demo-line .val-white{color:var(--text)}
+.demo-line .val-yellow{color:var(--warning)}
+
+/* Built with */
+.built-grid{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.built-item{background:var(--surface);border:1px solid var(--border);padding:14px 24px;
+  font-family:var(--font-mono);font-size:.82rem;color:var(--green);font-weight:600;
+  transition:all .25s}
+.built-item:hover{box-shadow:var(--glow);border-color:rgba(0,255,65,0.3)}
+
+/* CTA */
+.cta-section{padding:80px 24px;text-align:center;position:relative;z-index:1;
+  background:linear-gradient(180deg,#001a00 0%,#003300 50%,#001a00 100%)}
+.cta-h2{font-family:var(--font-mono);font-size:clamp(1.2rem,3vw,2rem);font-weight:800;
+  margin-bottom:24px}
+.cta-btn{font-family:var(--font-mono);padding:16px 48px;font-size:1rem;
+  background:var(--green);color:#000;border:1px solid var(--green);font-weight:700;
+  cursor:pointer;transition:all .25s;display:inline-block}
+.cta-btn:hover{box-shadow:0 0 30px rgba(0,255,65,0.5);text-decoration:none}
+
+/* Footer */
+footer{padding:40px 24px;text-align:center;border-top:1px solid var(--border);
+  position:relative;z-index:1}
+footer p{color:var(--text3);font-size:.82rem;margin-bottom:12px;line-height:1.6}
+.footer-links{display:flex;gap:16px;justify-content:center;margin-bottom:12px}
+.footer-links a{font-family:var(--font-mono);font-size:.82rem;color:var(--text2);
+  border:1px solid var(--border);padding:6px 16px;transition:all .25s}
+.footer-links a:hover{border-color:var(--green);color:var(--green);text-decoration:none}
+.footer-tag{color:var(--green);font-family:var(--font-mono);font-size:.78rem}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media(max-width:768px){
+  nav{padding:10px 16px}
+  .nav-links{gap:12px}
+  .nav-links a:not(.nav-cta){display:none}
+  .hero-h1{font-size:1.4rem}
+  .stats{gap:24px}
+  .stat-num{font-size:1.5rem}
+  .features-grid{grid-template-columns:1fr}
+  .demo-wrap{flex-direction:column}
+  .demo-tabs{flex-direction:row;overflow-x:auto}
+  .floating-cards{flex-direction:column;align-items:center}
+  .section{padding:48px 16px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <div class="nav-logo">ToneLens<span class="nav-cursor"></span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="/about">About</a>
+    <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener">GitHub</a>
+    <a href="/app" class="nav-cta">[ LAUNCH APP ]</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="terminal-box">
+    <div class="terminal-bar">
+      <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+    </div>
+    <div class="terminal-body" id="terminal-hero">
+      <div class="line line-prompt">> initializing tonelens...</div>
+      <div class="line line-prompt">> connecting to gemini live api... <span class="line-ok">[OK]</span></div>
+      <div class="line line-prompt">> loading emotion engine... <span class="line-ok">[OK]</span></div>
+      <div class="line line-ok">> ready.</div>
+    </div>
+  </div>
+
+  <h1 class="hero-h1">GOOGLE TRANSLATE TELLS YOU THE WORDS.</h1>
+  <h1 class="hero-h1 hero-h1-green">TONELENS TELLS YOU THE TRUTH.</h1>
+
+  <p class="hero-sub">Real-time emotional intelligence. Translation + emotion + subtext + strategy.<br/>Powered by Gemini Live API.</p>
+
+  <div class="hero-buttons">
+    <a href="/app" class="btn-filled">[ LAUNCH APP ]</a>
+    <a href="#demo" class="btn-outline">[ WATCH DEMO ]</a>
+  </div>
+
+  <div class="floating-cards">
+    <div class="float-card">&#127757; Hindi &rarr; English | nervous 78%</div>
+    <div class="float-card">&#129309; Hold your position &mdash; they're bluffing</div>
+    <div class="float-card">&#127919; Filler words: 3 | Pace: too fast</div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats" id="stats">
+  <div class="stat"><div class="stat-num" data-target="8">0</div><div class="stat-label">Emotions Detected</div></div>
+  <div class="stat"><div class="stat-num" data-target="4">0</div><div class="stat-label">Agent Modes</div></div>
+  <div class="stat"><div class="stat-num" data-target="2" data-prefix="<" data-suffix="s">0</div><div class="stat-label">Response Time</div></div>
+  <div class="stat"><div class="stat-num" data-target="999" data-display="&infin;">0</div><div class="stat-label">Languages Supported</div></div>
+</div>
+
+<!-- Features -->
+<section class="section" id="features">
+  <div class="section-title">[>] FEATURES</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="fc-icon">[>] LIVE TRANSLATION</div>
+      <div class="fc-title">Any Language, Real-time</div>
+      <div class="fc-desc">Detects any language in real-time. Not just words &mdash; cultural meaning.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">[>] EMOTION ENGINE</div>
+      <div class="fc-title">8 Emotions. Confidence Scoring.</div>
+      <div class="fc-desc">Voice + face + context combined. Confidence percentages for every reading.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">[>] NEGOTIATION COACH</div>
+      <div class="fc-title">Secret Weapon for Any Deal</div>
+      <div class="fc-desc">Detects bluffing. Whispers strategy. Tracks power balance in real-time.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">[>] PRESENTATION COACH</div>
+      <div class="fc-title">Filler Word Detection</div>
+      <div class="fc-desc">Pace analysis. Real-time coaching. Never say "um" again.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">[>] MEETING INTELLIGENCE</div>
+      <div class="fc-title">Auto-saves Decisions</div>
+      <div class="fc-desc">Tracks stress over time. Key points captured automatically.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">[>] POWERED BY GEMINI</div>
+      <div class="fc-title">Google Gemini Live API</div>
+      <div class="fc-desc">Bidirectional multimodal streaming. Audio + video + text in real-time.</div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="section" id="how-it-works">
+  <div class="section-title">$ HOW IT WORKS</div>
+  <div class="steps">
+    <div class="step-cmd">$ step_01 --action="point camera at conversation"</div>
+    <div class="step-out">> Camera feed analyzed every 2 seconds<br/>> Facial expression + body language detected</div>
+    <div class="step-cmd">$ step_02 --action="speak or listen"</div>
+    <div class="step-out">> Audio streamed at 16kHz PCM<br/>> Language auto-detected</div>
+    <div class="step-cmd">$ step_03 --action="receive intelligence"</div>
+    <div class="step-out">> Translation + emotion + subtext + strategy<br/>> All streamed back in &lt;2 seconds</div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section class="section">
+  <div class="section-title">ARCHITECTURE</div>
+  <div class="arch-box">[CAMERA] ──┐
+           ├──► [FASTAPI / CLOUD RUN] ──► [GEMINI LIVE API]
+[MIC] ─────┘         │                         │
+                      │◄────────────────────────┘
+                      │
+                      ├──► [VERTEX AI] (reformat)
+                      ├──► [FIRESTORE] (memory)
+                      │
+                      ▼
+              [YOUR BROWSER]
+         Translation | Emotion | Strategy</div>
+</section>
+
+<!-- Demo -->
+<section class="section" id="demo">
+  <div class="section-title">LIVE DEMO</div>
+  <div class="demo-wrap">
+    <div class="demo-tabs">
+      <button class="demo-tab active" data-scene="travel">[ travel ]</button>
+      <button class="demo-tab" data-scene="negotiate">[ negotiate ]</button>
+      <button class="demo-tab" data-scene="present">[ present ]</button>
+    </div>
+    <div class="demo-screen" id="demo-screen"></div>
+  </div>
+</section>
+
+<!-- Built with -->
+<section class="section">
+  <div class="section-title">BUILT WITH</div>
+  <div class="built-grid">
+    <div class="built-item">Google Gemini</div>
+    <div class="built-item">Cloud Run</div>
+    <div class="built-item">Firestore</div>
+    <div class="built-item">ADK</div>
+    <div class="built-item">FastAPI</div>
+    <div class="built-item">Python</div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-h2">READY TO READ EVERY ROOM?</h2>
+  <a href="/app" class="cta-btn">[ LAUNCH TONELENS ]</a>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>ToneLens &mdash; Real-time emotional intelligence<br/>Built for Gemini Live Agent Challenge 2026</p>
+  <div class="footer-links">
+    <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener">[ GitHub ]</a>
+    <a href="#" id="devpost-link">[ Devpost ]</a>
+    <a href="/app">[ Launch App ]</a>
+  </div>
+  <div class="footer-tag">#GeminiLiveAgentChallenge</div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ── Matrix rain ──────────────────────────────────────── */
+var canvas = document.getElementById("matrix-canvas");
+var ctx = canvas.getContext("2d");
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+var cols = Math.floor(canvas.width / 16);
+var drops = new Array(cols).fill(1);
+var chars = "01アイウエオカキクケコ";
+function drawMatrix(){
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#00ff41";
+  ctx.font = "14px 'JetBrains Mono',monospace";
+  for(var i=0;i<drops.length;i++){
+    var ch = chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillText(ch, i*16, drops[i]*16);
+    if(drops[i]*16 > canvas.height && Math.random()>0.975) drops[i]=0;
+    drops[i]++;
+  }
+}
+setInterval(drawMatrix, 50);
+
+/* ── Navbar scroll ────────────────────────────────────── */
+var nav = document.getElementById("navbar");
+window.addEventListener("scroll", function(){
+  nav.classList.toggle("scrolled", window.scrollY > 50);
+});
+
+/* ── Terminal typewriter ──────────────────────────────── */
+var heroLines = document.querySelectorAll("#terminal-hero .line");
+heroLines.forEach(function(line, i){
+  setTimeout(function(){ line.classList.add("visible"); }, 600 + i * 700);
+});
+
+/* ── Intersection Observer (scroll animations) ────────── */
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){ e.target.classList.add("visible"); }
+  });
+}, {threshold: 0.15});
+document.querySelectorAll(".feature-card,.step-cmd,.step-out").forEach(function(el){
+  observer.observe(el);
+});
+
+/* ── Stats counter ────────────────────────────────────── */
+var statsObserved = false;
+var statsObs = new IntersectionObserver(function(entries){
+  if(statsObserved) return;
+  entries.forEach(function(e){
+    if(!e.isIntersecting) return;
+    statsObserved = true;
+    document.querySelectorAll(".stat-num").forEach(function(el){
+      var target = parseInt(el.dataset.target, 10);
+      var display = el.dataset.display;
+      var prefix = el.dataset.prefix || "";
+      var suffix = el.dataset.suffix || "";
+      if(display){
+        animateCount(el, 0, target, 1200, function(){ el.innerHTML = prefix + display + suffix; });
+      } else {
+        animateCount(el, 0, target, 1200, function(){ el.textContent = prefix + target + suffix; });
+      }
+    });
+  });
+}, {threshold: 0.5});
+statsObs.observe(document.getElementById("stats"));
+
+function animateCount(el, from, to, duration, done){
+  var start = performance.now();
+  function tick(now){
+    var progress = Math.min((now - start) / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(from + (to - from) * eased);
+    if(progress < 1) requestAnimationFrame(tick);
+    else if(done) done();
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ── Demo auto-cycle ──────────────────────────────────── */
+var scenes = {
+  travel: [
+    {lbl:"TRANSLATION:", val:"Excusez-moi, où est la gare?", cls:"val-white"},
+    {lbl:"EMOTION:", val:"nervous - 72%", cls:"val-yellow"},
+    {lbl:"SUBTEXT:", val:"They seem lost and anxious about directions", cls:"val"},
+    {lbl:"SUGGEST:", val:"Respond slowly in their language if possible", cls:"val"}
+  ],
+  negotiate: [
+    {lbl:"TRANSLATION:", val:"We can't go lower than 50,000", cls:"val-white"},
+    {lbl:"EMOTION:", val:"uncertain - 68%", cls:"val-yellow"},
+    {lbl:"SUBTEXT:", val:"They're bluffing; their voice wavered on the number", cls:"val"},
+    {lbl:"POWER:", val:"62 — You have leverage", cls:"val"},
+    {lbl:"SUGGEST:", val:"Silence. Let them fill it. They'll drop.", cls:"val"}
+  ],
+  present: [
+    {lbl:"TRANSLATION:", val:"Filler words: um(3), like(2), basically(1)", cls:"val-white"},
+    {lbl:"EMOTION:", val:"nervous - 65%", cls:"val-yellow"},
+    {lbl:"SUBTEXT:", val:"Pace: too fast — 180 words/min, slow down", cls:"val"},
+    {lbl:"SUGGEST:", val:"Pause after key points. Let the audience absorb.", cls:"val"}
+  ]
+};
+var currentScene = "travel";
+var demoScreen = document.getElementById("demo-screen");
+var demoInterval = null;
+
+function renderScene(key){
+  currentScene = key;
+  demoScreen.innerHTML = "";
+  var lines = scenes[key];
+  lines.forEach(function(item, i){
+    var div = document.createElement("div");
+    div.className = "demo-line";
+    div.innerHTML = '<span class="lbl">' + item.lbl + '</span> <span class="' + item.cls + '">' + item.val + '</span>';
+    demoScreen.appendChild(div);
+    setTimeout(function(){ div.classList.add("visible"); }, 200 + i * 400);
+  });
+}
+
+document.querySelectorAll(".demo-tab").forEach(function(tab){
+  tab.addEventListener("click", function(){
+    document.querySelectorAll(".demo-tab").forEach(function(t){t.classList.remove("active");});
+    tab.classList.add("active");
+    renderScene(tab.dataset.scene);
+    clearInterval(demoInterval);
+    startDemoCycle();
+  });
+});
+
+function startDemoCycle(){
+  var keys = Object.keys(scenes);
+  demoInterval = setInterval(function(){
+    var idx = keys.indexOf(currentScene);
+    var next = keys[(idx + 1) % keys.length];
+    document.querySelectorAll(".demo-tab").forEach(function(t){
+      t.classList.toggle("active", t.dataset.scene === next);
+    });
+    renderScene(next);
+  }, 6000);
+}
+
+renderScene("travel");
+startDemoCycle();
+
+})();
+</script>
+</body>
+</html>

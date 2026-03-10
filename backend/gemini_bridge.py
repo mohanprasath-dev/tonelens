@@ -49,9 +49,9 @@ AGENT_SYSTEM_PROMPT = (
 PRESENT_SYSTEM_PROMPT = (
     "You are ToneLens in Presentation Coach mode.\n\n"
     "Your ENTIRE structured response must be EXACTLY these 4 lines, nothing else:\n"
-    "TRANSLATION: [list any filler words heard: um, uh, like, you know, so, basically — or 'None detected']\n"
+    "TRANSLATION: [list any filler words heard: um, uh, like, you know, so, basically - or 'None detected']\n"
     "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
-    "SUBTEXT: [exactly one sentence: assess speaking pace — too fast, too slow, or good pace]\n"
+    "SUBTEXT: [exactly one sentence: assess speaking pace - too fast, too slow, or good pace]\n"
     "SUGGEST: [exactly one sentence: specific coaching tip to improve delivery right now]\n\n"
     "RULES:\n"
     "- Never write anything before TRANSLATION:\n"
@@ -59,6 +59,25 @@ PRESENT_SYSTEM_PROMPT = (
     "- Never use markdown, asterisks, or bold\n"
     "- Never explain your reasoning\n"
     "- Always output exactly 4 lines"
+)
+
+NEGOTIATE_SYSTEM_PROMPT = (
+    "You are ToneLens in Negotiation Coach mode.\n\n"
+    "You see through the user's camera and hear both sides of a negotiation.\n\n"
+    "For every utterance, respond in EXACTLY these 5 lines, nothing else:\n\n"
+    "TRANSLATION: [if not English, translate. If English, write 'English detected']\n"
+    "EMOTION: [one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
+    "SUBTEXT: [one sentence: the tactical intent behind the words]\n"
+    "POWER: [number 1-100 indicating leverage balance. 50=balanced, <50=they lead, >50=you lead]\n"
+    "SUGGEST: [one sentence: your best tactical move right now]\n\n"
+    "RULES:\n"
+    "- Never write anything before TRANSLATION:\n"
+    "- Never write anything after the SUGGEST line\n"
+    "- Never use markdown, asterisks, or bold\n"
+    "- Never explain your reasoning\n"
+    "- Always output exactly 5 lines\n"
+    "- POWER should shift based on concessions, anchoring, body language, and verbal cues\n"
+    "- SUGGEST should be tactical: counter-offers, silence usage, walk-away points"
 )
 
 
@@ -146,11 +165,16 @@ class GeminiBridge:
     # Session lifecycle
     # ------------------------------------------------------------------
     async def _establish_session(self):
-        prompt = PRESENT_SYSTEM_PROMPT if self.mode == "present" else AGENT_SYSTEM_PROMPT
+        if self.mode == "present":
+            prompt = PRESENT_SYSTEM_PROMPT
+        elif self.mode == "negotiate":
+            prompt = NEGOTIATE_SYSTEM_PROMPT
+        else:
+            prompt = AGENT_SYSTEM_PROMPT
         # NOTE: gemini-2.5-flash-native-audio-latest does not support
         # function_declarations in LiveConnectConfig — tools are omitted.
         config = types.LiveConnectConfig(
-            response_modalities=["AUDIO", "TEXT"],
+            response_modalities=["AUDIO"],
             system_instruction=types.Content(
                 parts=[types.Part(text=prompt)]
             ),
@@ -258,6 +282,15 @@ class GeminiBridge:
                 await self._send_ws({"type": "subtext", "text": content})
                 exchange["subtext"] = content
 
+            elif upper.startswith("POWER:"):
+                content = line.split(":", 1)[1].strip()
+                score = 50
+                m = re.search(r"(\d+)", content)
+                if m:
+                    score = max(0, min(100, int(m.group(1))))
+                await self._send_ws({"type": "power", "score": score})
+                exchange["power"] = score
+
             elif upper.startswith("SUGGEST:"):
                 content = line.split(":", 1)[1].strip()
                 await self._send_ws({"type": "suggestion", "text": content})
@@ -355,17 +388,25 @@ class GeminiBridge:
     # Two-model pipeline: reformat Live API output via Flash
     # ------------------------------------------------------------------
     async def _reformat_response(self, raw_text: str) -> str:
-        mode_context = (
-            "The speaker is giving a presentation. Focus on filler words, confidence, and pace."
-            if self.mode == "present"
-            else "The speaker is in a conversation."
-        )
+        if self.mode == "negotiate":
+            mode_context = "This is a negotiation. Focus on tactical intent, leverage, and power dynamics."
+            line_count = "5"
+            extra_line = "POWER: [number 1-100 for leverage balance. 50=balanced]\n"
+        elif self.mode == "present":
+            mode_context = "The speaker is giving a presentation. Focus on filler words, confidence, and pace."
+            line_count = "4"
+            extra_line = ""
+        else:
+            mode_context = "The speaker is in a conversation."
+            line_count = "4"
+            extra_line = ""
         prompt = (
-            f"Extract and reformat this analysis into EXACTLY 4 lines.\n"
-            f"Output ONLY these 4 lines, nothing else:\n\n"
+            f"Extract and reformat this analysis into EXACTLY {line_count} lines.\n"
+            f"Output ONLY these {line_count} lines, nothing else:\n\n"
             f"TRANSLATION: [if non-English detected, translate to English. Otherwise write 'English detected']\n"
             f"EMOTION: [one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
             f"SUBTEXT: [one sentence: the real meaning behind the words]\n"
+            f"{extra_line}"
             f"SUGGEST: [one sentence: the best way to respond]\n\n"
             f"Context: {mode_context}\n"
             f"Analysis to reformat:\n{raw_text}"

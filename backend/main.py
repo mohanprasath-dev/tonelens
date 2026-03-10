@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from backend.gemini_bridge import GeminiBridge
-from backend.session_manager import create_session
+from backend.session_manager import create_session, get_session
 
 load_dotenv()
 
@@ -39,16 +39,38 @@ _active_bridges: dict[str, GeminiBridge] = {}
 # REST endpoints
 # ------------------------------------------------------------------
 @app.get("/")
-async def index():
-    index_path = FRONTEND_DIR / "index.html"
-    if not index_path.exists():
+async def landing():
+    path = FRONTEND_DIR / "landing.html"
+    if not path.exists():
         return JSONResponse({"error": "Frontend not found"}, status_code=404)
-    return FileResponse(str(index_path), media_type="text/html")
+    return FileResponse(str(path), media_type="text/html")
+
+
+@app.get("/app")
+async def index():
+    path = FRONTEND_DIR / "index.html"
+    if not path.exists():
+        return JSONResponse({"error": "Frontend not found"}, status_code=404)
+    return FileResponse(str(path), media_type="text/html")
+
+
+@app.get("/about")
+async def about():
+    path = FRONTEND_DIR / "about.html"
+    if not path.exists():
+        return JSONResponse({"error": "Frontend not found"}, status_code=404)
+    return FileResponse(str(path), media_type="text/html")
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "tonelens"}
+
+
+@app.get("/api/history/{session_id}")
+async def history(session_id: str):
+    exchanges = await get_session(session_id)
+    return {"exchanges": exchanges[-10:]}
 
 
 # ------------------------------------------------------------------
@@ -89,7 +111,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
             elif msg_type == "mode":
                 new_mode = msg.get("mode", "travel")
-                if new_mode in ("travel", "meeting", "present"):
+                if new_mode in ("travel", "meeting", "present", "negotiate"):
                     bridge.mode = new_mode
                     logger.info(f"[{session_id}] Mode changed to {new_mode}")
                     # Reconnect with updated system prompt
