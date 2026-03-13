@@ -1,355 +1,875 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>About — ToneLens</title>
-<meta name="description" content="Google Translate tells you the words. ToneLens tells you the truth."/>
-<meta property="og:title" content="ToneLens — Real-time Emotional Intelligence"/>
-<meta property="og:description" content="Google Translate tells you the words. ToneLens tells you the truth."/>
-<meta property="og:type" content="website"/>
-<meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' fill='%23000'><rect width='1200' height='630'/><text x='600' y='315' text-anchor='middle' fill='%2300ff41' font-size='80' font-family='monospace'>ToneLens</text></svg>"/>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%2300ff41'/></svg>"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-::selection{background:#00ff41;color:#000}
-html{scroll-behavior:smooth}
-:root{
-  --bg:#000;--surface:#0a0a0a;--border:#1a1a1a;
-  --green:#00ff41;--green2:#00cc33;--dim:#003311;
-  --text:#fff;--text2:#888;--text3:#444;
-  --danger:#ff3333;--warning:#ffaa00;
-  --glow:0 0 20px rgba(0,255,65,0.3);
-  --font-mono:'JetBrains Mono',monospace;
-  --font-body:'Inter',sans-serif;
-}
-body{background:var(--bg);color:var(--text);font-family:var(--font-body);
-  overflow-x:hidden;cursor:default}
-a{color:var(--green);text-decoration:none;cursor:pointer}
-a:hover{text-decoration:underline}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>About — ToneLens</title>
+  <meta name="description" content="Google Translate tells you the words. ToneLens tells you the truth." />
+  <meta property="og:title" content="ToneLens — Real-time Emotional Intelligence" />
+  <meta property="og:description" content="Google Translate tells you the words. ToneLens tells you the truth." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image"
+    content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' fill='%23000'><rect width='1200' height='630'/><text x='600' y='315' text-anchor='middle' fill='%2300f0ff' font-size='80' font-family='monospace'>ToneLens</text></svg>" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%2300f0ff'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* Scanline */
-body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,0.015) 2px,rgba(0,255,65,0.015) 4px)}
+    ::-moz-selection {
+      background: #00f0ff;
+      color: #000
+    }
 
-#matrix-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.05}
+    ::selection {
+      background: #00f0ff;
+      color: #000
+    }
 
-/* Nav */
-nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;
-  justify-content:space-between;padding:14px 32px;
-  background:rgba(0,0,0,0.7);backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);transition:background .3s}
-nav.scrolled{background:rgba(0,0,0,0.95)}
-.nav-logo{font-family:var(--font-mono);font-size:1.15rem;font-weight:700;color:var(--green);
-  display:flex;align-items:center;gap:2px}
-.nav-cursor{display:inline-block;width:10px;height:18px;background:var(--green);
-  animation:blink .8s step-end infinite;margin-left:2px}
-@keyframes blink{50%{opacity:0}}
-.nav-links{display:flex;align-items:center;gap:24px}
-.nav-links a{font-size:.85rem;color:var(--text2);transition:color .2s;font-weight:500}
-.nav-links a:hover{color:var(--green);text-decoration:none}
-.nav-cta{font-family:var(--font-mono);font-size:.82rem;padding:8px 20px;
-  border:1px solid var(--green);color:var(--green);background:transparent;
-  cursor:pointer;transition:all .25s;font-weight:600;display:inline-block}
-.nav-cta:hover{background:var(--green);color:#000;box-shadow:var(--glow);text-decoration:none}
+    html {
+      scroll-behavior: smooth
+    }
 
-/* Layout */
-.content{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:120px 24px 60px}
-.section{margin-bottom:64px}
-.section-title{font-family:var(--font-mono);font-size:1.3rem;font-weight:700;
-  color:var(--green);margin-bottom:24px}
+    :root {
+      --bg: #000;
+      --surface: #0a0a0a;
+      --border: #1a1a1a;
+      --cyan: #00f0ff;
+      --cyan2: #00b8cc;
+      --dim: #003333;
+      --text: #fff;
+      --text2: #888;
+      --text3: #444;
+      --danger: #ff3333;
+      --warning: #ffaa00;
+      --glow: 0 0 20px rgba(0, 240, 255, 0.3);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-body: 'Inter', sans-serif;
+      --inner-shadow: inset 0 -4px 12px rgba(0, 0, 0, 0.5);
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* Hero */
-.about-hero{padding-top:48px;margin-bottom:64px;text-align:center}
-.about-hero .terminal-lines{font-family:var(--font-mono);font-size:.85rem;
-  color:var(--green);line-height:2;margin-bottom:24px}
-.about-hero .terminal-lines .line{opacity:0;transform:translateY(4px);transition:all .4s}
-.about-hero .terminal-lines .line.visible{opacity:1;transform:translateY(0)}
-.about-hero h1{font-family:var(--font-mono);font-size:clamp(1.3rem,4vw,2.2rem);
-  font-weight:800;margin-bottom:10px}
-.about-hero .sub{color:var(--green);font-size:1rem;font-weight:500}
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px
+    }
 
-/* Code comment block */
-.code-comment{background:var(--surface);border:1px solid var(--border);padding:24px 28px;
-  font-family:var(--font-mono);font-size:.85rem;color:var(--text2);line-height:1.8;
-  border-left:3px solid var(--green);white-space:pre-wrap}
+    ::-webkit-scrollbar-track {
+      background: var(--bg)
+    }
 
-/* JSON card */
-.json-card{background:var(--surface);border:1px solid var(--border);padding:20px;
-  font-family:var(--font-mono);font-size:.82rem;line-height:1.7;overflow-x:auto}
-.json-cmd{color:var(--text2);margin-bottom:12px}
-.json-key{color:var(--green)}
-.json-str{color:var(--text)}
-.json-arr{color:var(--warning)}
-.json-brace{color:var(--text3)}
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.3);
+      border-radius: 4px;
+      border: 2px solid var(--bg)
+    }
 
-/* Timeline */
-.timeline{display:flex;flex-direction:column;gap:16px}
-.tl-item{display:flex;align-items:center;gap:14px;opacity:0;transform:translateX(20px);
-  transition:all .5s ease}
-.tl-item.visible{opacity:1;transform:translateX(0)}
-.tl-day{font-family:var(--font-mono);font-size:.78rem;color:var(--text3);
-  min-width:60px;flex-shrink:0;font-weight:600}
-.tl-bar-wrap{flex:1;display:flex;align-items:center;gap:10px}
-.tl-bar{height:16px;border-radius:2px;background:var(--green);transition:width 1.5s ease;width:0}
-.tl-bar.empty{background:var(--text3);opacity:.2}
-.tl-bar.visible{width:var(--w)}
-.tl-desc{font-size:.82rem;color:var(--text2);min-width:0;flex:1}
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--cyan)
+    }
 
-/* Tech stack */
-.tech-block{background:var(--surface);border:1px solid var(--border);padding:20px;
-  font-family:var(--font-mono);font-size:.8rem;color:var(--green);line-height:1.8;
-  white-space:pre-wrap}
-.tech-cmd{color:var(--text2)}
-.tech-pkg{color:var(--text)}
-.tech-comment{color:var(--text3)}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: default;
+      opacity: 0;
+      animation: fadeIn 0.5s var(--ease) forwards;
+    }
 
-/* Roadmap */
-.roadmap{background:var(--surface);border:1px solid var(--border);padding:20px;
-  font-family:var(--font-mono);font-size:.85rem;line-height:2}
-.rm-cmd{color:var(--text2);margin-bottom:8px}
-.rm-done{color:var(--green)}
-.rm-todo{color:var(--text3)}
+    @keyframes fadeIn {
+      to {
+        opacity: 1
+      }
+    }
 
-/* Links */
-.about-links{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.about-link{font-family:var(--font-mono);padding:12px 28px;border:1px solid var(--border);
-  color:var(--text2);font-size:.85rem;font-weight:600;transition:all .25s;cursor:pointer;
-  display:inline-block}
-.about-link:hover{border-color:var(--green);color:var(--green);box-shadow:var(--glow);text-decoration:none}
+    body.page-exit {
+      opacity: 0;
+      transition: opacity 0.3s var(--ease)
+    }
 
-/* Footer */
-footer{padding:40px 24px;text-align:center;border-top:1px solid var(--border);
-  position:relative;z-index:1}
-footer p{color:var(--text3);font-size:.82rem;line-height:1.6}
-.footer-tag{color:var(--green);font-family:var(--font-mono);font-size:.78rem;margin-top:8px}
+    a {
+      color: var(--cyan);
+      text-decoration: none;
+      cursor: pointer
+    }
 
-@media(max-width:768px){
-  nav{padding:10px 16px}
-  .nav-links a:not(.nav-cta){display:none}
-  .content{padding:100px 16px 40px}
-  .tl-desc{font-size:.75rem}
-}
-</style>
+    a:hover {
+      text-decoration: underline
+    }
+
+    /* Scanline */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 240, 255, 0.015) 2px, rgba(0, 240, 255, 0.015) 4px)
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.03
+    }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      transition: background .3s
+    }
+
+    nav.scrolled {
+      background: rgba(0, 0, 0, 0.95)
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 2px
+    }
+
+    .nav-cursor {
+      display: inline-block;
+      width: 10px;
+      height: 18px;
+      background: var(--cyan);
+      animation: blink .8s step-end infinite;
+      margin-left: 2px
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0
+      }
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px
+    }
+
+    .nav-links a {
+      font-size: .85rem;
+      color: var(--text2);
+      transition: color .2s;
+      font-weight: 500
+    }
+
+    .nav-links a:hover {
+      color: var(--cyan);
+      text-decoration: none
+    }
+
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: .82rem;
+      padding: 8px 20px;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      background: transparent;
+      cursor: pointer;
+      transition: all .25s var(--ease);
+      font-weight: 600;
+      display: inline-block
+    }
+
+    .nav-cta:hover {
+      background: var(--cyan);
+      color: #000;
+      box-shadow: var(--glow);
+      text-decoration: none
+    }
+
+    .nav-cta:active {
+      transform: scale(0.96)
+    }
+
+    /* Layout */
+    .content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 140px 24px 80px
+    }
+
+    .section {
+      margin-bottom: 72px
+    }
+
+    .section-title {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-bottom: 32px;
+      letter-spacing: -0.02em
+    }
+
+    /* Hero */
+    .about-hero {
+      margin-bottom: 80px;
+      text-align: center
+    }
+
+    .about-hero .terminal-lines {
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      color: var(--cyan);
+      line-height: 2;
+      margin-bottom: 32px
+    }
+
+    .about-hero .terminal-lines .line {
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all .4s
+    }
+
+    .about-hero .terminal-lines .line.visible {
+      opacity: 1;
+      transform: translateY(0)
+    }
+
+    .about-hero h1 {
+      font-family: var(--font-mono);
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.03em
+    }
+
+    .about-hero .sub {
+      color: var(--cyan);
+      font-size: 1.1rem;
+      font-weight: 500
+    }
+
+    /* Cards shared styling */
+    .card-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: var(--inner-shadow);
+      overflow: hidden
+    }
+
+    /* Code comment block */
+    .code-comment {
+      padding: 32px;
+      font-family: var(--font-mono);
+      font-size: .9rem;
+      color: var(--text2);
+      line-height: 1.9;
+      border-left: 3px solid var(--cyan);
+      white-space: pre-wrap;
+      background: rgba(10, 10, 10, 0.8);
+      backdrop-filter: blur(12px)
+    }
+
+    /* JSON card */
+    .json-card {
+      padding: 24px 32px;
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      line-height: 1.8;
+      overflow-x: auto
+    }
+
+    .json-cmd {
+      color: var(--text2);
+      margin-bottom: 16px;
+      font-size: .9rem
+    }
+
+    .json-key {
+      color: var(--cyan)
+    }
+
+    .json-str {
+      color: #fff
+    }
+
+    .json-num {
+      color: var(--warning)
+    }
+
+    .json-arr {
+      color: var(--text)
+    }
+
+    .json-brace {
+      color: var(--text3)
+    }
+
+    /* Timeline */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 24px
+    }
+
+    .tl-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all .5s ease
+    }
+
+    .tl-item.visible {
+      opacity: 1;
+      transform: translateX(0)
+    }
+
+    .tl-day {
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      color: var(--text3);
+      min-width: 70px;
+      flex-shrink: 0;
+      font-weight: 700;
+      margin-top: 2px
+    }
+
+    .tl-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .tl-bar-wrap {
+      display: flex;
+      align-items: center;
+      width: 100%
+    }
+
+    .tl-bar {
+      height: 16px;
+      border-radius: 3px;
+      background: var(--cyan);
+      transition: width 1.5s ease;
+      width: 0
+    }
+
+    .tl-bar.tl-empty {
+      width: 100%;
+      background: transparent;
+      border: 1px dashed var(--text3);
+      opacity: 0.6
+    }
+
+    .tl-bar.visible {
+      width: var(--w)
+    }
+
+    .tl-desc {
+      font-size: .9rem;
+      color: var(--text2);
+      line-height: 1.6
+    }
+
+    /* Tech stack */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px
+    }
+
+    .tech-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+      box-shadow: var(--inner-shadow);
+      transition: all .25s var(--ease)
+    }
+
+    .tech-badge:hover {
+      border-color: rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.08), var(--inner-shadow);
+      transform: translateY(-2px)
+    }
+
+    .tb-icon {
+      width: 8px;
+      flex-shrink: 0;
+      background: var(--cyan)
+    }
+
+    .tb-info {
+      padding: 14px 18px;
+      flex: 1
+    }
+
+    .tb-name {
+      font-family: var(--font-mono);
+      font-size: .9rem;
+      color: var(--cyan);
+      font-weight: 700;
+      margin-bottom: 4px
+    }
+
+    .tb-role {
+      font-size: .8rem;
+      color: var(--text2)
+    }
+
+    /* Roadmap */
+    .roadmap {
+      padding: 24px 32px
+    }
+
+    .rm-cmd {
+      font-family: var(--font-mono);
+      color: var(--text2);
+      margin-bottom: 20px;
+      font-size: .9rem
+    }
+
+    .rm-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+      font-size: .95rem;
+      line-height: 1.5;
+      font-family: var(--font-body)
+    }
+
+    .rm-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--cyan);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #000;
+      flex-shrink: 0;
+      margin-top: 3px;
+      transition: all .25s var(--ease)
+    }
+
+    .rm-checkbox.checked {
+      background: var(--cyan);
+      border-color: var(--cyan)
+    }
+
+    .rm-text.rm-done {
+      text-decoration: line-through;
+      color: var(--text3)
+    }
+
+    .rm-text.rm-todo {
+      color: var(--text)
+    }
+
+    /* Links */
+    .about-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px
+    }
+
+    .about-link {
+      font-family: var(--font-mono);
+      padding: 14px 32px;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-size: .9rem;
+      font-weight: 600;
+      transition: all .25s var(--ease);
+      cursor: pointer;
+      display: inline-block;
+      border-radius: 4px
+    }
+
+    .about-link:hover {
+      background: rgba(0, 240, 255, 0.08);
+      box-shadow: var(--glow);
+      text-decoration: none
+    }
+
+    .about-link:active {
+      transform: scale(0.96)
+    }
+
+    /* Footer */
+    footer {
+      padding: 48px 24px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 1
+    }
+
+    footer p {
+      color: var(--text3);
+      font-size: .85rem;
+      line-height: 1.7
+    }
+
+    .footer-tag {
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      margin-top: 12px
+    }
+
+    @media(max-width:768px) {
+      nav {
+        padding: 10px 16px
+      }
+
+      .nav-links a:not(.nav-cta) {
+        display: none
+      }
+
+      .content {
+        padding: 100px 16px 40px
+      }
+
+      .tl-item {
+        flex-direction: column;
+        gap: 8px
+      }
+
+      .tl-day {
+        margin-top: 0;
+        font-size: .85rem
+      }
+
+      .tech-grid {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<canvas id="matrix-canvas"></canvas>
+  <canvas id="matrix-canvas"></canvas>
 
-<nav id="navbar">
-  <a href="/" class="nav-logo" style="text-decoration:none">ToneLens<span class="nav-cursor"></span></a>
-  <div class="nav-links">
-    <a href="/">Home</a>
-    <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener">GitHub</a>
-    <a href="/app" class="nav-cta">[ LAUNCH APP ]</a>
-  </div>
-</nav>
-
-<div class="content">
-
-  <!-- Hero -->
-  <div class="about-hero">
-    <div class="terminal-lines" id="hero-lines">
-      <div class="line">> whoami</div>
-      <div class="line">> building_tonelens.exe</div>
-      <div class="line">> loading_story...</div>
+  <nav id="navbar">
+    <a href="/" class="nav-logo" style="text-decoration:none">ToneLens<span class="nav-cursor"></span></a>
+    <div class="nav-links">
+      <a href="/" class="nav-transition">Home</a>
+      <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener">GitHub</a>
+      <a href="/app" class="nav-cta nav-transition">[ LAUNCH APP ]</a>
     </div>
-    <h1>THE STORY BEHIND TONELENS</h1>
-    <div class="sub">Built in 7 days. Powered by obsession.</div>
-  </div>
+  </nav>
 
-  <!-- The Problem -->
-  <div class="section">
-    <div class="section-title">THE PROBLEM</div>
-    <div class="code-comment">/*
- * People miss 70% of what's really being said.
- * A nervous laugh. A confident tone hiding desperation.
- * Crossed arms. Avoiding eye contact.
- *
- * Google Translate gives you words.
- * ToneLens gives you truth.
- */</div>
-  </div>
+  <div class="content">
 
-  <!-- The Builder -->
-  <div class="section">
-    <div class="section-title">THE BUILDER</div>
-    <div class="json-card">
-      <div class="json-cmd">$ cat builder.json</div>
-      <span class="json-brace">{</span><br/>
-      &nbsp;&nbsp;<span class="json-key">"name"</span>: <span class="json-str">"Mohan Prasath"</span>,<br/>
-      &nbsp;&nbsp;<span class="json-key">"age"</span>: <span class="json-str">18</span>,<br/>
-      &nbsp;&nbsp;<span class="json-key">"location"</span>: <span class="json-str">"Chennai, India &#127470;&#127475;"</span>,<br/>
-      &nbsp;&nbsp;<span class="json-key">"education"</span>: <span class="json-str">"B.Tech CSE (AI &amp; ML)"</span>,<br/>
-      &nbsp;&nbsp;<span class="json-key">"college"</span>: <span class="json-str">"B.S.A. Crescent Institute"</span>,<br/>
-      &nbsp;&nbsp;<span class="json-key">"interests"</span>: [<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-arr">"edge_ai"</span>,<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-arr">"web_development"</span>,<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-arr">"entrepreneurship"</span>,<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-arr">"hackathons"</span><br/>
-      &nbsp;&nbsp;],<br/>
-      &nbsp;&nbsp;<span class="json-key">"status"</span>: <span class="json-str">"building_the_future"</span><br/>
-      <span class="json-brace">}</span>
+    <!-- Hero -->
+    <div class="about-hero">
+      <div class="terminal-lines" id="hero-lines">
+        <div class="line">> whoami</div>
+        <div class="line">> building_tonelens.exe</div>
+        <div class="line">> loading_story...</div>
+      </div>
+      <h1>THE STORY BEHIND TONELENS</h1>
+      <div class="sub">Built in 7 days. Powered by obsession.</div>
     </div>
-  </div>
 
-  <!-- Build Timeline -->
-  <div class="section">
-    <div class="section-title">BUILD TIMELINE</div>
-    <div class="timeline" id="timeline">
-      <div class="tl-item">
-        <div class="tl-day">[DAY 1]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar" style="--w:80%"></div>
-          <div class="tl-desc">Got Gemini Live API working after 6hrs of debugging</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-day">[DAY 2]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar" style="--w:80%"></div>
-          <div class="tl-desc">Cloud Run deployed. All 4 panels working.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-day">[DAY 3]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar" style="--w:100%"></div>
-          <div class="tl-desc">Negotiate mode. Became a real agent.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-day">[DAY 4]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar" style="--w:100%"></div>
-          <div class="tl-desc">UI + landing page. Complete product.</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-day">[DAY 5]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar empty" style="--w:100%"></div>
-          <div class="tl-desc">Demo video recording</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-day">[DAY 6]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar empty" style="--w:100%"></div>
-          <div class="tl-desc">Blog post + submission</div>
-        </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-day">[DAY 7]</div>
-        <div class="tl-bar-wrap">
-          <div class="tl-bar empty" style="--w:100%"></div>
-          <div class="tl-desc">&#127942;</div>
-        </div>
+    <!-- The Problem -->
+    <div class="section">
+      <div class="section-title">THE PROBLEM</div>
+      <div class="card-box code-comment">/*
+        * People miss 70% of what's really being said.
+        * A nervous laugh. A confident tone hiding desperation.
+        * Crossed arms. Avoiding eye contact.
+        *
+        * Google Translate gives you words.
+        * ToneLens gives you truth.
+        */</div>
+    </div>
+
+    <!-- The Builder -->
+    <div class="section">
+      <div class="section-title">THE BUILDER</div>
+      <div class="card-box json-card">
+        <div class="json-cmd">$ cat builder.json</div>
+        <span class="json-brace">{</span><br />
+        &nbsp;&nbsp;<span class="json-key">"name"</span>: <span class="json-str">"Mohan Prasath"</span>,<br />
+        &nbsp;&nbsp;<span class="json-key">"age"</span>: <span class="json-num">18</span>,<br />
+        &nbsp;&nbsp;<span class="json-key">"location"</span>: <span class="json-str">"Chennai, India
+          &#127470;&#127475;"</span>,<br />
+        &nbsp;&nbsp;<span class="json-key">"education"</span>: <span class="json-str">"B.Tech CSE (AI &amp;
+          ML)"</span>,<br />
+        &nbsp;&nbsp;<span class="json-key">"college"</span>: <span class="json-str">"B.S.A. Crescent
+          Institute"</span>,<br />
+        &nbsp;&nbsp;<span class="json-key">"interests"</span>: <span class="json-brace">[</span><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"edge_ai"</span>,<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"web_development"</span>,<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"entrepreneurship"</span>,<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"hackathons"</span><br />
+        &nbsp;&nbsp;<span class="json-brace">]</span>,<br />
+        &nbsp;&nbsp;<span class="json-key">"status"</span>: <span class="json-str">"building_the_future"</span><br />
+        <span class="json-brace">}</span>
       </div>
     </div>
-  </div>
 
-  <!-- Tech Stack -->
-  <div class="section">
-    <div class="section-title">TECH STACK</div>
-    <div class="tech-block"><span class="tech-cmd">$ pip list | grep tonelens-deps</span>
-
-<span class="tech-pkg">google-genai==1.x</span>        <span class="tech-comment">[GEMINI LIVE API]</span>
-<span class="tech-pkg">google-cloud-firestore</span>   <span class="tech-comment">[SESSION MEMORY]</span>
-<span class="tech-pkg">fastapi</span>                  <span class="tech-comment">[BACKEND]</span>
-<span class="tech-pkg">google-adk</span>               <span class="tech-comment">[AGENT FRAMEWORK]</span>
-<span class="tech-pkg">uvicorn</span>                  <span class="tech-comment">[SERVER]</span>
-
-<span class="tech-cmd">$ gcloud services list --enabled | grep tonelens</span>
-
-<span class="tech-pkg">Cloud Run</span>      <span class="tech-comment">[HOSTING]</span>
-<span class="tech-pkg">Vertex AI</span>      <span class="tech-comment">[REFORMAT ENGINE]</span>
-<span class="tech-pkg">Firestore</span>      <span class="tech-comment">[DATABASE]</span>
-<span class="tech-pkg">Cloud Build</span>    <span class="tech-comment">[CI/CD]</span></div>
-  </div>
-
-  <!-- Roadmap -->
-  <div class="section">
-    <div class="section-title">WHAT'S NEXT</div>
-    <div class="roadmap">
-      <div class="rm-cmd">> tonelens --roadmap</div>
-      <div class="rm-todo">[ ] Mobile app (React Native)</div>
-      <div class="rm-todo">[ ] Browser extension</div>
-      <div class="rm-todo">[ ] Enterprise API</div>
-      <div class="rm-todo">[ ] Real-time earpiece mode</div>
-      <div class="rm-done">[x] Win Gemini Live Agent Challenge 2026</div>
+    <!-- Build Timeline -->
+    <div class="section">
+      <div class="section-title">BUILD TIMELINE</div>
+      <div class="timeline" id="timeline">
+        <div class="tl-item">
+          <div class="tl-day">[DAY 1]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar" style="--w:80%"></div>
+            </div>
+            <div class="tl-desc">Got Gemini Live API working after 6hrs of debugging</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-day">[DAY 2]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar" style="--w:80%"></div>
+            </div>
+            <div class="tl-desc">Cloud Run deployed. All 4 panels working.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-day">[DAY 3]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar" style="--w:100%"></div>
+            </div>
+            <div class="tl-desc">Negotiate mode. Became a real agent.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-day">[DAY 4]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar" style="--w:100%"></div>
+            </div>
+            <div class="tl-desc">UI + landing page. Complete product.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-day">[DAY 5]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar tl-empty"></div>
+            </div>
+            <div class="tl-desc">Demo video recording</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-day">[DAY 6]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar tl-empty"></div>
+            </div>
+            <div class="tl-desc">Blog post + submission</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-day">[DAY 7]</div>
+          <div class="tl-content">
+            <div class="tl-bar-wrap">
+              <div class="tl-bar tl-empty"></div>
+            </div>
+            <div class="tl-desc">&#127942;</div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Links -->
-  <div class="section" style="text-align:center">
-    <div class="about-links">
-      <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener" class="about-link">[ VIEW GITHUB ]</a>
-      <a href="#" class="about-link">[ DEVPOST SUBMISSION ]</a>
-      <a href="/app" class="about-link">[ LAUNCH APP ]</a>
+    <!-- Tech Stack -->
+    <div class="section">
+      <div class="section-title">TECH STACK</div>
+      <div class="tech-grid">
+        <div class="tech-badge">
+          <div class="tb-icon" style="background:#4b8bfe"></div>
+          <div class="tb-info">
+            <div class="tb-name">Google Gemini</div>
+            <div class="tb-role">Live Multimodal API</div>
+          </div>
+        </div>
+        <div class="tech-badge">
+          <div class="tb-icon" style="background:#ffbd2e"></div>
+          <div class="tb-info">
+            <div class="tb-name">Firestore</div>
+            <div class="tb-role">Session Memory</div>
+          </div>
+        </div>
+        <div class="tech-badge">
+          <div class="tb-icon" style="background:#00f0ff"></div>
+          <div class="tb-info">
+            <div class="tb-name">FastAPI</div>
+            <div class="tb-role">Python Backend Node</div>
+          </div>
+        </div>
+        <div class="tech-badge">
+          <div class="tb-icon" style="background:#ff5f57"></div>
+          <div class="tb-info">
+            <div class="tb-name">Cloud Run</div>
+            <div class="tb-role">Serverless Hosting</div>
+          </div>
+        </div>
+        <div class="tech-badge">
+          <div class="tb-icon" style="background:#28ca42"></div>
+          <div class="tb-info">
+            <div class="tb-name">ADK Toolkit</div>
+            <div class="tb-role">Agent Framework</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Roadmap -->
+    <div class="section">
+      <div class="section-title">WHAT'S NEXT</div>
+      <div class="card-box roadmap">
+        <div class="rm-cmd">> tonelens --roadmap</div>
+
+        <div class="rm-item">
+          <div class="rm-checkbox"></div>
+          <div class="rm-text rm-todo">Mobile app (React Native)</div>
+        </div>
+        <div class="rm-item">
+          <div class="rm-checkbox"></div>
+          <div class="rm-text rm-todo">Browser extension</div>
+        </div>
+        <div class="rm-item">
+          <div class="rm-checkbox"></div>
+          <div class="rm-text rm-todo">Enterprise API</div>
+        </div>
+        <div class="rm-item">
+          <div class="rm-checkbox"></div>
+          <div class="rm-text rm-todo">Real-time earpiece mode</div>
+        </div>
+        <div class="rm-item">
+          <div class="rm-checkbox checked">&#10003;</div>
+          <div class="rm-text rm-done">Win Gemini Live Agent Challenge 2026</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="section" style="text-align:center">
+      <div class="about-links">
+        <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener" class="about-link">[ VIEW
+          GITHUB ]</a>
+        <a href="#" class="about-link">[ DEVPOST SUBMISSION ]</a>
+        <a href="/app" class="about-link nav-transition">[ LAUNCH APP ]</a>
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <footer>
+    <p>ToneLens &mdash; Real-time emotional intelligence<br />Built for Gemini Live Agent Challenge 2026</p>
+    <div class="footer-tag">#GeminiLiveAgentChallenge</div>
+  </footer>
 
-<footer>
-  <p>ToneLens &mdash; Real-time emotional intelligence<br/>Built for Gemini Live Agent Challenge 2026</p>
-  <div class="footer-tag">#GeminiLiveAgentChallenge</div>
-</footer>
+  <script>
+    (function () {
+      "use strict";
 
-<script>
-(function(){
-"use strict";
+      /* Page transitions */
+      document.querySelectorAll('.nav-transition').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          if (a.target === '_blank') return;
+          e.preventDefault();
+          document.body.classList.add('page-exit');
+          setTimeout(function () { window.location.href = a.href; }, 300);
+        });
+      });
 
-/* ── Matrix rain ──────────────────────────────────────── */
-var canvas = document.getElementById("matrix-canvas");
-var ctx = canvas.getContext("2d");
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
-var cols = Math.floor(canvas.width / 16);
-var drops = new Array(cols).fill(1);
-var chars = "01アイウエオカキクケコ";
-function drawMatrix(){
-  ctx.fillStyle = "rgba(0,0,0,0.05)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#00ff41";
-  ctx.font = "14px 'JetBrains Mono',monospace";
-  for(var i=0;i<drops.length;i++){
-    var ch = chars[Math.floor(Math.random()*chars.length)];
-    ctx.fillText(ch, i*16, drops[i]*16);
-    if(drops[i]*16 > canvas.height && Math.random()>0.975) drops[i]=0;
-    drops[i]++;
-  }
-}
-setInterval(drawMatrix, 50);
+      /* ── Matrix rain ──────────────────────────────────────── */
+      var canvas = document.getElementById("matrix-canvas");
+      var ctx = canvas.getContext("2d");
+      function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+      var cols = Math.floor(canvas.width / 16);
+      var drops = new Array(cols).fill(1);
+      var chars = "01アイウエオカキクケコ";
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(0,0,0,0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#00f0ff";
+        ctx.font = "14px 'JetBrains Mono',monospace";
+        for (var i = 0; i < drops.length; i++) {
+          var ch = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(ch, i * 16, drops[i] * 16);
+          if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+          drops[i]++;
+        }
+      }
+      setInterval(drawMatrix, 50);
 
-/* ── Nav scroll ───────────────────────────────────────── */
-window.addEventListener("scroll", function(){
-  document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
-});
+      /* ── Nav scroll ───────────────────────────────────────── */
+      window.addEventListener("scroll", function () {
+        document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
+      });
 
-/* ── Hero typewriter ──────────────────────────────────── */
-document.querySelectorAll("#hero-lines .line").forEach(function(line, i){
-  setTimeout(function(){ line.classList.add("visible"); }, 600 + i * 700);
-});
+      /* ── Hero typewriter ──────────────────────────────────── */
+      document.querySelectorAll("#hero-lines .line").forEach(function (line, i) {
+        setTimeout(function () { line.classList.add("visible"); }, 600 + i * 700);
+      });
 
-/* ── Timeline scroll animation ────────────────────────── */
-var observer = new IntersectionObserver(function(entries){
-  entries.forEach(function(e){
-    if(e.isIntersecting){
-      e.target.classList.add("visible");
-      var bar = e.target.querySelector(".tl-bar");
-      if(bar) bar.classList.add("visible");
-    }
-  });
-}, {threshold: 0.2});
-document.querySelectorAll(".tl-item").forEach(function(el){ observer.observe(el); });
+      /* ── Timeline scroll animation ────────────────────────── */
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add("visible");
+            var bar = e.target.querySelector(".tl-bar");
+            if (bar) bar.classList.add("visible");
+          }
+        });
+      }, { threshold: 0.2 });
+      document.querySelectorAll(".tl-item").forEach(function (el) { observer.observe(el); });
 
-})();
-</script>
+    })();
+  </script>
 </body>
+
 </html>
