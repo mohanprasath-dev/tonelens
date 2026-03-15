@@ -133,13 +133,28 @@ class GeminiBridge:
             logger.warning(f"Failed to send frame: {e}")
 
     async def send_audio(self, base64_pcm: str):
+        logger.debug(
+            "send_audio called: base64_len=%d live_session=%s connected=%s",
+            len(base64_pcm),
+            "present" if self.live_session else "None",
+            self._connected,
+        )
         if not self.live_session:
+            logger.warning("send_audio: live_session is None, dropping chunk")
             return
         try:
             audio_bytes = base64.b64decode(base64_pcm)
-            await self.live_session.send_realtime_input(
-                audio=types.Blob(mime_type="audio/pcm;rate=16000", data=audio_bytes)
+            logger.debug(
+                "send_audio: decoded PCM bytes=%d, sending to Gemini Live (mime=audio/pcm;rate=16000)",
+                len(audio_bytes),
             )
+            await self.live_session.send_realtime_input(
+                audio=types.Blob(
+                    data=audio_bytes,
+                    mime_type="audio/pcm;rate=16000",
+                )
+            )
+            logger.debug("send_audio: chunk sent successfully (%d bytes)", len(audio_bytes))
         except Exception as e:
             logger.warning(f"Failed to send audio: {e}")
 
