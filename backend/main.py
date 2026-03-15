@@ -90,6 +90,52 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     bridge = GeminiBridge()
     _active_bridges[session_id] = bridge
 
+    # ------------------------------------------------------------------
+    # Audio queue — buffers chunks received before/during session
+    # establishment or reconnection so they are never silently dropped.
+    # Capacity: 60 chunks (~6 s at 100 ms per chunk). When full, the
+    # oldest chunk is evicted to make room for the newest.
+    # ------------------------------------------------------------------
+    _AUDIO_QUEUE_MAX = 60
+    audio_queue: asyncio.Queue[str] = asyncio.Queue(maxsize=_AUDIO_QUEUE_MAX)
+
+    async def _audio_drain():
+        """Continuously forward queued audio chunks to the live session.
+
+        Waits (non-blocking spin) while the session is not yet ready,
+        then flushes buffered chunks and keeps forwarding in real time.
+        This handles both the initial 2-second setup delay and any gap
+        caused by _try_reconnect() setting live_session back to None.
+        """
+        while True:
+            chunk = await audio_queue.get()
+            try:
+                # Spin-wait up to 5 s for session to become ready.
+                waited = 0.0
+                while bridge.live_session is None and bridge._connected and waited < 5.0:
+                    await asyncio.sleep(0.05)
+                    waited += 0.05
+                if not bridge._connected:
+                    continue
+                if bridge.live_session is None:
+                    logger.warning(
+                        "[%s] audio_drain: session still None after 5 s, dropping chunk",
+                        session_id,
+                    )
+                    continue
+                await bridge.send_audio(chunk)
+                logger.info(
+                    "[%s] Audio chunk forwarded to Gemini (%d b64 chars)",
+                    session_id,
+                    len(chunk),
+                )
+            except Exception as e:
+                logger.warning("[%s] audio_drain error: %s", session_id, e)
+            finally:
+                audio_queue.task_done()
+
+    drain_task = asyncio.create_task(_audio_drain())
+
     try:
         await bridge.connect(websocket, effective_id, mode="travel")
 
@@ -107,7 +153,21 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 await bridge.send_frame(msg.get("data", ""))
 
             elif msg_type == "audio":
-                await bridge.send_audio(msg.get("data", ""))
+                data = msg.get("data", "")
+                logger.info(
+                    "[%s] Audio chunk received (%d b64 chars), queue_size=%d",
+                    session_id,
+                    len(data),
+                    audio_queue.qsize(),
+                )
+                if audio_queue.full():
+                    # Evict oldest to avoid stale backlog
+                    try:
+                        audio_queue.get_nowait()
+                        audio_queue.task_done()
+                    except asyncio.QueueEmpty:
+                        pass
+                await audio_queue.put(data)
 
             elif msg_type == "mode":
                 new_mode = msg.get("mode", "travel")
@@ -135,6 +195,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         ts = datetime.now(timezone.utc).isoformat()
         logger.error(f"[{ts}] WebSocket error for {session_id}: {e}")
     finally:
+        drain_task.cancel()
+        try:
+            await drain_task
+        except asyncio.CancelledError:
+            pass
         await bridge.disconnect()
         _active_bridges.pop(session_id, None)
         ts = datetime.now(timezone.utc).isoformat()
