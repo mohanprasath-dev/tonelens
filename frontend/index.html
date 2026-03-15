@@ -1746,6 +1746,212 @@
         min-height: 44px;
       }
     }
+
+    @media (max-width: 768px) {
+      html,
+      body {
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      header {
+        flex-wrap: wrap;
+        row-gap: 8px;
+        padding: 10px 12px;
+      }
+
+      .logo {
+        font-size: 16px;
+      }
+
+      .home-link {
+        font-size: 0;
+        width: 24px;
+        min-width: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .home-link::before {
+        content: "<-";
+        font-size: 16px;
+        font-family: var(--font-mono);
+        color: var(--text2);
+      }
+
+      .header-center {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        gap: 8px;
+        scrollbar-width: none;
+      }
+
+      .header-center::-webkit-scrollbar {
+        display: none;
+      }
+
+      .mode-btn {
+        min-width: 80px;
+        flex: 0 0 auto;
+        font-size: 10px;
+        padding: 6px 8px;
+      }
+
+      .main {
+        flex-direction: column;
+        min-height: calc(100vh - 92px);
+        height: auto;
+        margin-top: 0;
+        padding-top: 0;
+        overflow: visible;
+      }
+
+      .camera-panel,
+      .analysis-panel {
+        width: 100%;
+        padding: 12px;
+      }
+
+      .camera-panel {
+        margin-top: 0;
+        padding-top: 0;
+        flex: 0 0 auto;
+      }
+
+      .camera-wrap {
+        width: 100%;
+        height: 240px;
+        flex: 0 0 auto;
+      }
+
+      .analysis-panel {
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+      }
+
+      .analysis-panel > * {
+        width: 100%;
+      }
+
+      .card,
+      .power-bar-wrap,
+      .score-ring-wrap,
+      .whisper-panel,
+      .momentum-wrap,
+      #cultural-tip-card,
+      #agent-actions-card,
+      .emotion-meter,
+      .mic-area,
+      .meeting-note-item,
+      .history-card {
+        padding: 12px;
+      }
+
+      .card-body,
+      .ct-tip,
+      .score-ring-desc,
+      .whisper-text,
+      .mn-text,
+      .history-card,
+      .meeting-note-item,
+      .aa-desc,
+      .mic-status,
+      .hc-subtext,
+      .toast,
+      .ct-header,
+      .card-header,
+      .emotion-meter-label,
+      .power-bar-title,
+      .score-ring-label,
+      .whisper-header,
+      .momentum-header,
+      .power-bar-score,
+      .conn-status,
+      .mode-btn,
+      .sidebar-hdr,
+      .sidebar-list {
+        font-size: calc(100% - 2px);
+      }
+
+      .emotion-meter,
+      .emotion-meter-track,
+      .emotion-meter-fill,
+      .power-bar-wrap,
+      .power-bar-track {
+        width: 100%;
+      }
+
+      .power-bar-labels {
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .power-bar-labels span:nth-child(2) {
+        display: none;
+      }
+
+      .power-bar-labels span:nth-child(1),
+      .power-bar-labels span:nth-child(3) {
+        color: transparent;
+        position: relative;
+      }
+
+      .power-bar-labels span:nth-child(1)::after,
+      .power-bar-labels span:nth-child(3)::after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        color: var(--text3);
+        font-family: var(--font-mono);
+      }
+
+      .power-bar-labels span:nth-child(1)::after {
+        content: "THEM";
+      }
+
+      .power-bar-labels span:nth-child(3)::after {
+        content: "YOU";
+      }
+
+      #history-sidebar {
+        position: fixed;
+        inset: 0;
+        width: 100% !important;
+        height: 100vh;
+        z-index: 2000;
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+      }
+
+      #history-sidebar.open {
+        transform: translateX(0);
+      }
+
+      #history-sidebar .sidebar-hdr {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      #closeHistoryBtn,
+      button,
+      .mode-btn,
+      .icon-btn,
+      .export-btn,
+      .retry-btn,
+      .stress-toggle-btn,
+      .mic-btn,
+      .btn-112,
+      .btn-dismiss,
+      .emergency-btns a {
+        min-height: 44px;
+      }
+    }
   </style>
 </head>
 
