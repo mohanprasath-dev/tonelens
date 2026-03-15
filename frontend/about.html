@@ -556,6 +556,14 @@
       margin-top: 12px
     }
 
+    .footer-build {
+      color: var(--text3);
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      margin-top: 10px;
+      opacity: 0.9
+    }
+
     @media(max-width:768px) {
       nav {
         padding: 10px 16px
@@ -586,6 +594,7 @@
 
     /* ── Mobile Responsive Additions (Additive Only) ─────── */
     @media (max-width:768px) {
+      html,
       body {
         overflow-x: hidden;
         -webkit-tap-highlight-color: transparent;
@@ -616,8 +625,8 @@
 
       .json-card {
         padding: 16px;
-        font-size: 13px;
-        overflow-x: hidden;
+        font-size: 12px;
+        overflow-x: auto;
       }
 
       .timeline {
@@ -876,9 +885,9 @@
     <!-- Links -->
     <div class="section" style="text-align:center">
       <div class="about-links">
-        <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener" class="about-link">[ VIEW
-          GITHUB ]</a>
-        <a href="#" class="about-link">[ DEVPOST SUBMISSION ]</a>
+        <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener" class="about-link">[ VIEW GITHUB ]</a>
+        <a href="https://linkedin.com/in/mohanprasath-dev" target="_blank" rel="noopener" class="about-link">[ LINKEDIN ]</a>
+        <a href="mailto:mohanprasath210607@gmail.com" class="about-link">[ EMAIL ]</a>
         <a href="/app" class="about-link nav-transition">[ LAUNCH APP ]</a>
       </div>
     </div>
@@ -888,6 +897,7 @@
   <footer>
     <p>ToneLens &mdash; Real-time emotional intelligence<br />Built for Gemini Live Agent Challenge 2026</p>
     <div class="footer-tag">#GeminiLiveAgentChallenge</div>
+    <div class="footer-build">v1.0 · build 2026-03-15</div>
   </footer>
 
   <script>

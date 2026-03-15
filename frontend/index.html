@@ -161,6 +161,11 @@
       color: var(--cyan)
     }
 
+    .logo a {
+      color: inherit;
+      text-decoration: none;
+    }
+
     .logo-cursor {
       display: inline-block;
       width: 8px;
@@ -230,8 +235,8 @@
     }
 
     .conn-dot.connected {
-      background: var(--cyan);
-      box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+      background: #28ca42;
+      box-shadow: 0 0 8px rgba(40, 202, 66, 0.5);
       animation: pulse 2s infinite
     }
 
@@ -293,29 +298,6 @@
         opacity: .4;
         transform: scale(1.15)
       }
-    }
-
-    #mock-test-btn {
-      display: none;
-      font-family: var(--font-mono);
-      padding: 5px 12px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--warning);
-      cursor: pointer;
-      font-size: .72rem;
-      font-weight: 500;
-      transition: all var(--transition)
-    }
-
-    #mock-test-btn:hover {
-      border-color: var(--warning);
-      background: rgba(255, 170, 0, 0.08)
-    }
-
-    #mock-test-btn.running {
-      pointer-events: none;
-      opacity: .5
     }
 
     /* ── Main layout ──────────────────────────────────────── */
@@ -1493,71 +1475,21 @@
       color: var(--cyan)
     }
 
-    /* ── Responsive ───────────────────────────────────────── */
-    @media(max-width:768px) {
-      .main {
-        flex-direction: column
-      }
-
-      .camera-panel {
-        flex: 0 0 auto;
-        max-height: 250px
-      }
-
-      .analysis-panel {
-        flex: 1;
-        overflow-y: auto
-      }
-
-      .sidebar.open {
-        width: 220px
-      }
-
-      .header-center {
-        overflow-x: auto;
-        scrollbar-width: none;
-        flex-wrap: nowrap
-      }
-
-      .header-center::-webkit-scrollbar {
-        display: none
-      }
-
-      .home-link {
-        display: none
-      }
-
-      body {
-        font-size: 85%
-      }
-
-      .card {
-        padding: 12px
-      }
-
-      .mode-btn {
-        padding: 4px 8px;
-        font-size: .68rem
-      }
-
-      .power-bar-wrap,
-      .score-ring-wrap,
-      .whisper-panel,
-      .momentum-wrap {
-        padding: 12px
-      }
-
-      #negotiate-panel {
-        gap: 6px
-      }
-    }
-
-    /* ── Mobile Responsive Additions (Additive Only) ─────── */
+    /* ── Mobile Layout ────────────────────────────────────── */
     @media (max-width:768px) {
       html,
       body {
+        height: 100vh;
+        overflow: hidden;
         overflow-x: hidden;
         -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
       ::-webkit-scrollbar {
@@ -1565,218 +1497,55 @@
         height: 0;
       }
 
+      #conn-banner,
+      #consent-banner,
+      .conn-banner {
+        margin: 0 !important;
+        padding: 0 !important;
+        top: 0 !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        border: 0 !important;
+        overflow: hidden;
+      }
+
+      #conn-banner,
+      .conn-banner,
+      #conn-banner:empty,
+      #consent-banner:not(.visible) {
+        display: none !important;
+      }
+
+      #consent-banner.visible {
+        display: flex;
+        height: auto !important;
+        padding: 6px 12px !important;
+        overflow: visible;
+        border-bottom: 1px solid rgba(255, 170, 0, 0.3) !important;
+      }
+
       header {
+        flex-shrink: 0;
         flex-wrap: wrap;
+        align-items: center;
         row-gap: 8px;
-        padding: 10px 12px;
+        column-gap: 10px;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+        top: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        position: relative !important;
       }
 
       .header-left,
       .header-right {
-        flex: 1;
+        flex: 1 1 auto;
+        min-width: 0;
       }
 
       .header-right {
         justify-content: flex-end;
-      }
-
-      .home-link {
-        font-size: 0;
-        width: 24px;
-        min-width: 24px;
-        display: inline-flex;
-        align-items: center;
-      }
-
-      .home-link::before {
-        content: "<-";
-        font-size: 16px;
-        color: var(--text2);
-        font-family: var(--font-mono);
-      }
-
-      #historyBtn,
-      #speakerIcon,
-      #mock-test-btn {
-        display: none;
-      }
-
-      .header-center {
-        order: 3;
-        width: 100%;
-        overflow-x: auto;
-        overflow-y: hidden;
-        flex-wrap: nowrap;
-        gap: 8px;
-        padding-right: 12px;
-        scrollbar-width: none;
-      }
-
-      .header-center::-webkit-scrollbar {
-        display: none;
-      }
-
-      .mode-btn {
-        min-width: 100px;
-        flex: 0 0 auto;
-      }
-
-      .main {
-        flex-direction: column;
-        height: calc(100vh - 92px);
-      }
-
-      .camera-panel,
-      .analysis-panel {
-        width: 100%;
-        padding: 12px;
-      }
-
-      .camera-wrap {
-        height: 240px;
-        flex: 0 0 auto;
-      }
-
-      .analysis-panel>* {
-        width: 100%;
-      }
-
-      .emotion-meter,
-      .emotion-meter-track,
-      .power-bar-wrap,
-      .whisper-panel {
-        width: 100%;
-      }
-
-      .power-bar-labels {
-        justify-content: space-between;
-      }
-
-      .power-bar-labels span:nth-child(2) {
-        display: none;
-      }
-
-      .power-bar-labels span:nth-child(1),
-      .power-bar-labels span:nth-child(3) {
-        color: transparent;
-        position: relative;
-      }
-
-      .power-bar-labels span:nth-child(1)::after,
-      .power-bar-labels span:nth-child(3)::after {
-        position: absolute;
-        top: 0;
-        left: 0;
-        color: var(--text3);
-        font-family: var(--font-mono);
-      }
-
-      .power-bar-labels span:nth-child(1)::after {
-        content: "THEM";
-      }
-
-      .power-bar-labels span:nth-child(3)::after {
-        content: "YOU";
-      }
-
-      .score-ring-svg {
-        width: 120px;
-        height: 120px;
-      }
-
-      #history-sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100% !important;
-        height: 100vh;
-        z-index: 2000;
-        transform: translateX(-100%);
-        transition: transform .3s ease;
-      }
-
-      #history-sidebar.open {
-        transform: translateX(0);
-      }
-
-      .card,
-      .power-bar-wrap,
-      .score-ring-wrap,
-      .whisper-panel,
-      .momentum-wrap,
-      #cultural-tip-card,
-      #agent-actions-card,
-      .emotion-meter,
-      .mic-area,
-      .meeting-note-item,
-      .history-card {
-        padding: 12px;
-      }
-
-      .card-body,
-      .ct-tip,
-      .score-ring-desc,
-      .whisper-text,
-      .mn-text,
-      .history-card,
-      .meeting-note-item,
-      .aa-desc,
-      .mic-status,
-      .hc-subtext,
-      .toast,
-      .ct-header,
-      .card-header,
-      .emotion-meter-label,
-      .power-bar-title,
-      .score-ring-label,
-      .whisper-header,
-      .momentum-header {
-        font-size: calc(100% - 2px);
-      }
-
-      button,
-      .mode-btn,
-      .icon-btn,
-      .export-btn,
-      .retry-btn,
-      .stress-toggle-btn,
-      .mic-btn,
-      .btn-112,
-      .btn-dismiss,
-      .emergency-btns a {
-        min-height: 44px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      html,
-      body {
-        overflow-x: hidden;
-        overflow-y: auto;
-      }
-
-      body {
-        padding-top: 0 !important;
-        margin-top: 0 !important;
-      }
-
-      header {
-        flex-wrap: wrap;
-        row-gap: 8px;
-        padding: 10px 12px;
-        height: auto !important;
-        min-height: unset !important;
-        position: relative !important;
-      }
-
-      .conn-banner,
-      #conn-banner {
-        display: none !important;
-      }
-
-      #conn-banner:empty,
-      #consent-banner:not(.visible) {
-        display: none !important;
       }
 
       .logo {
@@ -1799,9 +1568,17 @@
         color: var(--text2);
       }
 
+      #speakerIcon {
+        display: none;
+      }
+
       .header-center {
         order: 3;
+        display: flex;
+        flex-direction: row;
         width: 100%;
+        margin: 0 !important;
+        padding: 0 16px 0 0 !important;
         overflow-x: auto;
         overflow-y: hidden;
         flex-wrap: nowrap;
@@ -1814,52 +1591,80 @@
       }
 
       .mode-btn {
-        min-width: 80px;
-        flex: 0 0 auto;
+        min-width: 85px;
+        height: 36px;
+        min-height: 36px;
+        flex-shrink: 0;
         font-size: 10px;
-        padding: 6px 8px;
+        padding: 5px 8px;
       }
 
       .main {
+        flex: 1 1 auto;
+        display: flex;
         flex-direction: column;
-        min-height: calc(100vh - 92px);
-        height: auto;
-        margin-top: 0;
-        padding-top: 0;
-        overflow: visible;
+        overflow-y: auto;
+        overflow-x: hidden;
         margin: 0 !important;
         padding: 0 !important;
         gap: 0 !important;
-      }
-
-      .camera-panel,
-      .analysis-panel {
-        width: 100%;
-        padding: 12px;
+        top: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
       }
 
       .camera-panel {
-        margin-top: 0;
-        padding-top: 0;
+        width: 100%;
         flex: 0 0 auto;
+        gap: 8px;
         margin: 0 !important;
         padding: 0 !important;
+        top: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
       }
 
       .camera-wrap {
-        width: 100%;
-        height: 240px;
-        flex: 0 0 auto;
+        width: 100% !important;
+        height: 220px !important;
+        flex-shrink: 0;
         margin: 0 !important;
         padding: 0 !important;
-        height: 240px !important;
-        width: 100% !important;
+        top: 0 !important;
+        min-height: 0 !important;
+      }
+
+      .emotion-meter {
+        width: 100%;
+        padding: 10px;
+        margin: 0;
+      }
+
+      .emotion-meter-label {
+        font-size: 11px;
+      }
+
+      .emotion-meter-track {
+        width: 100%;
+        height: 6px;
+      }
+
+      #stress-tracker,
+      .stress-bar-wrap,
+      .momentum-wrap {
+        display: none !important;
       }
 
       .analysis-panel {
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        padding: 8px !important;
         overflow: visible;
+        min-height: 0;
+        height: auto !important;
       }
 
       .analysis-panel > * {
@@ -1870,14 +1675,24 @@
       .power-bar-wrap,
       .score-ring-wrap,
       .whisper-panel,
-      .momentum-wrap,
       #cultural-tip-card,
       #agent-actions-card,
-      .emotion-meter,
       .mic-area,
       .meeting-note-item,
       .history-card {
-        padding: 12px;
+        width: 100%;
+        padding: 10px !important;
+        height: auto !important;
+        min-height: 0 !important;
+      }
+
+      .card-header,
+      .power-bar-title,
+      .score-ring-label,
+      .whisper-header,
+      .momentum-header,
+      .ct-header {
+        font-size: 10px;
       }
 
       .card-body,
@@ -1885,32 +1700,15 @@
       .score-ring-desc,
       .whisper-text,
       .mn-text,
-      .history-card,
-      .meeting-note-item,
       .aa-desc,
-      .mic-status,
-      .hc-subtext,
-      .toast,
-      .ct-header,
-      .card-header,
-      .emotion-meter-label,
-      .power-bar-title,
-      .score-ring-label,
-      .whisper-header,
-      .momentum-header,
-      .power-bar-score,
-      .conn-status,
-      .mode-btn,
-      .sidebar-hdr,
-      .sidebar-list {
-        font-size: calc(100% - 2px);
+      .history-card,
+      .hc-subtext {
+        font-size: 13px;
       }
 
-      .emotion-meter,
-      .emotion-meter-track,
-      .emotion-meter-fill,
       .power-bar-wrap,
-      .power-bar-track {
+      .power-bar-track,
+      .emotion-meter-fill {
         width: 100%;
       }
 
@@ -1966,7 +1764,6 @@
         z-index: 1;
       }
 
-      #closeHistoryBtn,
       button,
       .mode-btn,
       .icon-btn,
@@ -2011,14 +1808,13 @@
   <header>
     <div class="header-left">
       <a href="/" class="home-link">&larr; HOME</a>
-      <div class="logo"><a href="index.html">ToneLens</a><span class="logo-cursor"></span></div>
+      <div class="logo"><a href="/app">ToneLens</a><span class="logo-cursor"></span></div>
     </div>
     <div class="header-center">
       <button class="mode-btn active" data-mode="travel">&#127757; Travel</button>
       <button class="mode-btn" data-mode="meeting">&#128188; Meeting</button>
       <button class="mode-btn" data-mode="present">&#127908; Present</button>
       <button class="mode-btn" data-mode="negotiate">&#9878;&#65039; Negotiate</button>
-      <button id="mock-test-btn">&#9889; Mock Test</button>
     </div>
     <div class="header-right">
       <div class="conn-status">
@@ -2258,7 +2054,6 @@
       var $scoreRingDesc = document.getElementById("scoreRingDesc");
       var $whisperText = document.getElementById("whisperText");
       var $whisperPrev = document.getElementById("whisperPrev");
-      var $mockTestBtn = document.getElementById("mock-test-btn");
       var bars = $waveform.querySelectorAll(".bar");
       var culturalTipTimer = null;
 
@@ -2894,6 +2689,9 @@
           startFrameCapture();
         } catch (e) {
           console.error("Camera error:", e);
+          $cameraError.querySelector("p").textContent = e && e.name === "NotAllowedError"
+            ? "Camera access was blocked. Allow permission, then tap [ RETRY ]."
+            : "Enable camera access to use ToneLens.";
           $video.style.display = "none";
           $cameraError.style.display = "flex";
         }
@@ -3068,64 +2866,6 @@
             await startAudio();
           }
         });
-      });
-
-      /* ── Mock test ──────────────────────────────────────────── */
-      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-        $mockTestBtn.style.display = "inline-block";
-      }
-
-      $mockTestBtn.addEventListener("click", function () {
-        if ($mockTestBtn.classList.contains("running")) return;
-        $mockTestBtn.classList.add("running");
-        $mockTestBtn.textContent = "> running...";
-        showToast("Mock test started", "blue");
-        var isNeg = currentMode === "negotiate";
-        var steps = [
-          function () {
-            handleMessage({ type: "translation", text: "Bonjour, comment allez-vous aujourd'hui?", source_language: "French" });
-            handleMessage({ type: "emotion", label: "confident", confidence: 0.82, signals: [] });
-          },
-          function () {
-            handleMessage({
-              type: "subtext", text: isNeg
-                ? "They are anchoring high to set the frame early"
-                : "The speaker is warm but testing your engagement level"
-            });
-          },
-          function () {
-            if (isNeg) handleMessage({ type: "power", score: 35 });
-            handleMessage({
-              type: "suggestion", text: isNeg
-                ? "Counter with a lower anchor - don't accept their frame"
-                : "Mirror their warmth - respond in French if possible"
-            });
-          },
-          function () {
-            handleMessage({
-              type: "agent_action", action: "cultural_tip",
-              data: {
-                tip: "In French business, starting with personal rapport is expected before negotiations.",
-                "do": "Reciprocate their greeting warmly", avoid: "Jumping straight to numbers",
-                language: "French"
-              }
-            });
-          },
-          function () {
-            if (isNeg) {
-              handleMessage({ type: "power", score: 55 });
-              handleMessage({ type: "emotion", label: "nervous", confidence: 0.73, signals: [] });
-              handleMessage({ type: "suggestion", text: "Their nervousness shows your counter worked - press gently" });
-            } else {
-              handleMessage({ type: "emotion", label: "happy", confidence: 0.88, signals: [] });
-              handleMessage({ type: "suggestion", text: "Great energy - maintain this positive dynamic" });
-            }
-            showToast("Mock test complete", "cyan");
-            $mockTestBtn.classList.remove("running");
-            $mockTestBtn.textContent = "\u26A1 Mock Test";
-          }
-        ];
-        steps.forEach(function (fn, idx) { setTimeout(fn, (idx + 1) * 2500); });
       });
 
       /* ── Init ───────────────────────────────────────────────── */
