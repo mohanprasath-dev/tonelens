@@ -201,7 +201,70 @@ class GeminiBridge:
                 async for msg in self.live_session.receive():
                     if not self._connected:
                         break
-                    await self._process_message(msg)
+
+                    server_content = getattr(msg, "server_content", None)
+                    if not server_content:
+                        logger.debug(
+                            "Live message has no server_content. top_level_fields=%s",
+                            [
+                                name
+                                for name in dir(msg)
+                                if not name.startswith("_") and not callable(getattr(msg, name, None))
+                            ],
+                        )
+                        continue
+
+                    model_turn = getattr(server_content, "model_turn", None)
+                    output_transcription = getattr(server_content, "output_transcription", None)
+                    turn_complete = bool(getattr(server_content, "turn_complete", False))
+
+                    model_turn_parts = []
+                    if model_turn and getattr(model_turn, "parts", None):
+                        model_turn_parts = model_turn.parts
+
+                    sc_fields = [
+                        name
+                        for name in dir(server_content)
+                        if not name.startswith("_") and not callable(getattr(server_content, name, None))
+                    ]
+                    logger.debug(
+                        (
+                            "server_content fields=%s "
+                            "model_turn_present=%s parts_count=%d "
+                            "output_transcription_present=%s output_transcription_text_present=%s "
+                            "turn_complete=%s"
+                        ),
+                        sc_fields,
+                        model_turn is not None,
+                        len(model_turn_parts),
+                        output_transcription is not None,
+                        bool(getattr(output_transcription, "text", None)) if output_transcription else False,
+                        turn_complete,
+                    )
+
+                    # 1) Text from model_turn.parts
+                    for part in model_turn_parts:
+                        part_text = getattr(part, "text", None)
+                        if part_text:
+                            self._text_buffer += part_text
+
+                        inline_data = getattr(part, "inline_data", None)
+                        if inline_data and getattr(inline_data, "data", None):
+                            audio_b64 = base64.b64encode(inline_data.data).decode()
+                            await self._send_ws({"type": "audio", "data": audio_b64})
+
+                    # 2) Text from output_transcription.text
+                    transcription_text = (
+                        getattr(output_transcription, "text", None) if output_transcription else None
+                    )
+                    if transcription_text:
+                        self._text_buffer += transcription_text
+
+                    # 3) Flush and parse once turn is complete
+                    if turn_complete and self._text_buffer.strip():
+                        clean = await self._reformat_response(self._text_buffer)
+                        self._text_buffer = ""
+                        await self._parse_and_send(clean)
         except asyncio.CancelledError:
             return
         except Exception as e:

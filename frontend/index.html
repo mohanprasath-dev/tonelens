@@ -1551,6 +1551,201 @@
         gap: 6px
       }
     }
+
+    /* ── Mobile Responsive Additions (Additive Only) ─────── */
+    @media (max-width:768px) {
+      html,
+      body {
+        overflow-x: hidden;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      header {
+        flex-wrap: wrap;
+        row-gap: 8px;
+        padding: 10px 12px;
+      }
+
+      .header-left,
+      .header-right {
+        flex: 1;
+      }
+
+      .header-right {
+        justify-content: flex-end;
+      }
+
+      .home-link {
+        font-size: 0;
+        width: 24px;
+        min-width: 24px;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .home-link::before {
+        content: "<-";
+        font-size: 16px;
+        color: var(--text2);
+        font-family: var(--font-mono);
+      }
+
+      #historyBtn,
+      #speakerIcon,
+      #mock-test-btn {
+        display: none;
+      }
+
+      .header-center {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        gap: 8px;
+        scrollbar-width: none;
+      }
+
+      .header-center::-webkit-scrollbar {
+        display: none;
+      }
+
+      .mode-btn {
+        min-width: 100px;
+        flex: 0 0 auto;
+      }
+
+      .main {
+        flex-direction: column;
+        height: calc(100vh - 92px);
+      }
+
+      .camera-panel,
+      .analysis-panel {
+        width: 100%;
+        padding: 12px;
+      }
+
+      .camera-wrap {
+        height: 240px;
+        flex: 0 0 auto;
+      }
+
+      .analysis-panel>* {
+        width: 100%;
+      }
+
+      .emotion-meter,
+      .emotion-meter-track,
+      .power-bar-wrap,
+      .whisper-panel {
+        width: 100%;
+      }
+
+      .power-bar-labels {
+        justify-content: space-between;
+      }
+
+      .power-bar-labels span:nth-child(2) {
+        display: none;
+      }
+
+      .power-bar-labels span:nth-child(1),
+      .power-bar-labels span:nth-child(3) {
+        color: transparent;
+        position: relative;
+      }
+
+      .power-bar-labels span:nth-child(1)::after,
+      .power-bar-labels span:nth-child(3)::after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        color: var(--text3);
+        font-family: var(--font-mono);
+      }
+
+      .power-bar-labels span:nth-child(1)::after {
+        content: "THEM";
+      }
+
+      .power-bar-labels span:nth-child(3)::after {
+        content: "YOU";
+      }
+
+      .score-ring-svg {
+        width: 120px;
+        height: 120px;
+      }
+
+      #history-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100vh;
+        z-index: 2000;
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+      }
+
+      #history-sidebar.open {
+        transform: translateX(0);
+      }
+
+      .card,
+      .power-bar-wrap,
+      .score-ring-wrap,
+      .whisper-panel,
+      .momentum-wrap,
+      #cultural-tip-card,
+      #agent-actions-card,
+      .emotion-meter,
+      .mic-area,
+      .meeting-note-item,
+      .history-card {
+        padding: 12px;
+      }
+
+      .card-body,
+      .ct-tip,
+      .score-ring-desc,
+      .whisper-text,
+      .mn-text,
+      .history-card,
+      .meeting-note-item,
+      .aa-desc,
+      .mic-status,
+      .hc-subtext,
+      .toast,
+      .ct-header,
+      .card-header,
+      .emotion-meter-label,
+      .power-bar-title,
+      .score-ring-label,
+      .whisper-header,
+      .momentum-header {
+        font-size: calc(100% - 2px);
+      }
+
+      button,
+      .mode-btn,
+      .icon-btn,
+      .export-btn,
+      .retry-btn,
+      .stress-toggle-btn,
+      .mic-btn,
+      .btn-112,
+      .btn-dismiss,
+      .emergency-btns a {
+        min-height: 44px;
+      }
+    }
   </style>
 </head>
 
@@ -1582,7 +1777,7 @@
   <header>
     <div class="header-left">
       <a href="/" class="home-link">&larr; HOME</a>
-      <div class="logo"><a href="/">ToneLens</a><span class="logo-cursor"></span></div>
+      <div class="logo"><a href="index.html">ToneLens</a><span class="logo-cursor"></span></div>
     </div>
     <div class="header-center">
       <button class="mode-btn active" data-mode="travel">&#127757; Travel</button>

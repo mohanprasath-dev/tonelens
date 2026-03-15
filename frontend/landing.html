@@ -1012,6 +1012,113 @@
         font-size: .7rem
       }
     }
+
+    /* ── Mobile Responsive Additions (Additive Only) ─────── */
+    @media (max-width:768px) {
+      body {
+        overflow-x: hidden;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #matrix-canvas {
+        display: none;
+      }
+
+      ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      nav {
+        padding: 10px 16px;
+      }
+
+      .nav-links a:not(.nav-cta) {
+        display: none;
+      }
+
+      .hero-h1 {
+        font-size: 32px;
+      }
+
+      .hero-sub {
+        font-size: 14px;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto;
+      }
+
+      .hero-buttons .btn-filled,
+      .hero-buttons .btn-outline {
+        width: 100%;
+      }
+
+      .floating-cards {
+        display: none;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        width: 100%;
+      }
+
+      .hw-term-body {
+        padding: 16px;
+      }
+
+      .arch-terminal {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .arch-box {
+        overflow-x: auto;
+        width: max-content;
+        min-width: 100%;
+      }
+
+      .cta-h2 {
+        font-size: 28px;
+      }
+
+      .section {
+        padding-top: 40px;
+        padding-bottom: 40px;
+      }
+
+      .cta-section {
+        padding-top: 40px;
+        padding-bottom: 40px;
+      }
+
+      button,
+      .btn-filled,
+      .btn-outline,
+      .nav-cta,
+      .cta-btn,
+      .demo-tab,
+      .footer-links a {
+        min-height: 44px;
+      }
+    }
   </style>
 </head>
 
