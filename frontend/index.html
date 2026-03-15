@@ -1608,6 +1608,7 @@
         overflow-y: hidden;
         flex-wrap: nowrap;
         gap: 8px;
+        padding-right: 12px;
         scrollbar-width: none;
       }
 
@@ -1754,10 +1755,28 @@
         overflow-y: auto;
       }
 
+      body {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+      }
+
       header {
         flex-wrap: wrap;
         row-gap: 8px;
         padding: 10px 12px;
+        height: auto !important;
+        min-height: unset !important;
+        position: relative !important;
+      }
+
+      .conn-banner,
+      #conn-banner {
+        display: none !important;
+      }
+
+      #conn-banner:empty,
+      #consent-banner:not(.visible) {
+        display: none !important;
       }
 
       .logo {
@@ -1808,6 +1827,9 @@
         margin-top: 0;
         padding-top: 0;
         overflow: visible;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
       }
 
       .camera-panel,
@@ -1820,12 +1842,18 @@
         margin-top: 0;
         padding-top: 0;
         flex: 0 0 auto;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
       .camera-wrap {
         width: 100%;
         height: 240px;
         flex: 0 0 auto;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 240px !important;
+        width: 100% !important;
       }
 
       .analysis-panel {
