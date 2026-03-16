@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from starlette.responses import Response
 
 from backend.gemini_bridge import GeminiBridge
 from backend.session_manager import create_session, get_session
@@ -47,6 +48,11 @@ async def landing():
     return FileResponse(str(path), media_type="text/html")
 
 
+@app.head("/")
+async def head_root():
+    return Response(status_code=200)
+
+
 @app.get("/app")
 async def index():
     path = FRONTEND_DIR / "index.html"
@@ -66,6 +72,11 @@ async def about():
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "tonelens"}
+
+
+@app.head("/health")
+async def head_health():
+    return Response(status_code=200)
 
 
 @app.get("/api/history/{session_id}")
