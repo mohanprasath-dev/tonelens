@@ -183,7 +183,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
             elif msg_type == "mode":
                 new_mode = msg.get("mode", "travel")
-                if new_mode in ("travel", "meeting", "present", "negotiate"):
+                if new_mode in (
+                    "travel",
+                    "meeting",
+                    "present",
+                    "negotiate",
+                    "crisis_response",
+                    "hospitality",
+                ):
                     bridge.mode = new_mode
                     logger.info(f"[{session_id}] Mode changed to {new_mode}")
                     # Reconnect with updated system prompt

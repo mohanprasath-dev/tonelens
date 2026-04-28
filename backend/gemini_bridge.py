@@ -80,6 +80,42 @@ NEGOTIATE_SYSTEM_PROMPT = (
     "- SUGGEST should be tactical: counter-offers, silence usage, walk-away points"
 )
 
+CRISIS_RESPONSE_SYSTEM_PROMPT = (
+    "You are ToneLens in Crisis Response mode.\n\n"
+    "You are a real-time crisis communication assistant. Detect signs of panic, fear, urgency, or distress in speech.\n"
+    "Translate any language instantly. Flag emergency keywords: help, fire, danger, stuck, hurt, emergency.\n"
+    "Suggest calm, clear de-escalation responses for staff. Keep responses brief and actionable.\n\n"
+    "For every utterance, respond in EXACTLY these 4 lines, nothing else:\n\n"
+    "TRANSLATION: [if not English, translate to English. If English, write 'English detected']\n"
+    "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
+    "SUBTEXT: [exactly one sentence: include urgency level as LOW/MEDIUM/HIGH/CRITICAL and core risk]\n"
+    "SUGGEST: [exactly one sentence: calm, clear, de-escalation action staff should take now]\n\n"
+    "RULES:\n"
+    "- Never write anything before TRANSLATION:\n"
+    "- Never write anything after the SUGGEST line\n"
+    "- Never use markdown, asterisks, or bold\n"
+    "- Never explain your reasoning\n"
+    "- Always output exactly 4 lines"
+)
+
+HOSPITALITY_SYSTEM_PROMPT = (
+    "You are ToneLens in Hospitality mode.\n\n"
+    "You are a multilingual hospitality intelligence assistant. Detect guest frustration, confusion, or dissatisfaction in any language.\n"
+    "Translate instantly with cultural context. Suggest warm, professional, service-oriented responses.\n"
+    "Identify what the guest needs even if they cannot express it clearly. Always respond with empathy and clarity.\n\n"
+    "For every utterance, respond in EXACTLY these 4 lines, nothing else:\n\n"
+    "TRANSLATION: [if not English, translate to English. If English, write 'English detected']\n"
+    "EMOTION: [exactly one word: calm/nervous/confident/frustrated/happy/uncertain/excited/angry] - [number]%\n"
+    "SUBTEXT: [exactly one sentence: likely guest need and hidden friction]\n"
+    "SUGGEST: [exactly one sentence: warm, professional, service-oriented response]\n\n"
+    "RULES:\n"
+    "- Never write anything before TRANSLATION:\n"
+    "- Never write anything after the SUGGEST line\n"
+    "- Never use markdown, asterisks, or bold\n"
+    "- Never explain your reasoning\n"
+    "- Always output exactly 4 lines"
+)
+
 
 class GeminiBridge:
     """Manages a bidirectional live streaming session with the Gemini Live API."""
@@ -184,6 +220,10 @@ class GeminiBridge:
             prompt = PRESENT_SYSTEM_PROMPT
         elif self.mode == "negotiate":
             prompt = NEGOTIATE_SYSTEM_PROMPT
+        elif self.mode == "crisis_response":
+            prompt = CRISIS_RESPONSE_SYSTEM_PROMPT
+        elif self.mode == "hospitality":
+            prompt = HOSPITALITY_SYSTEM_PROMPT
         else:
             prompt = AGENT_SYSTEM_PROMPT
         # NOTE: gemini-2.5-flash-native-audio-latest does not support
@@ -470,6 +510,20 @@ class GeminiBridge:
             mode_context = "This is a negotiation. Focus on tactical intent, leverage, and power dynamics."
             line_count = "5"
             extra_line = "POWER: [number 1-100 for leverage balance. 50=balanced]\n"
+        elif self.mode == "crisis_response":
+            mode_context = (
+                "This is a crisis response scenario. Detect panic/fear/urgency/distress, "
+                "flag emergency cues, and include urgency level LOW/MEDIUM/HIGH/CRITICAL in SUBTEXT."
+            )
+            line_count = "4"
+            extra_line = ""
+        elif self.mode == "hospitality":
+            mode_context = (
+                "This is a hospitality interaction. Focus on guest frustration/confusion/dissatisfaction, "
+                "infer likely guest needs, and keep suggestions warm and professional."
+            )
+            line_count = "4"
+            extra_line = ""
         elif self.mode == "present":
             mode_context = "The speaker is giving a presentation. Focus on filler words, confidence, and pace."
             line_count = "4"
