@@ -46,6 +46,7 @@
     body {
       height: 100%;
       overflow: hidden;
+      overflow-x: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', sans-serif;
@@ -53,8 +54,17 @@
     }
 
     body {
+      min-height: 100dvh;
       opacity: 0;
       animation: fadeIn .35s ease forwards;
+    }
+
+    body.camera-hidden .camera-wrap {
+      display: none;
+    }
+
+    body.camera-hidden .left-panel {
+      grid-template-rows: auto auto auto;
     }
 
     @keyframes fadeIn {
@@ -132,12 +142,14 @@
       border-bottom: 1px solid #1a1a1a;
       background: #0d0d0d;
       flex-shrink: 0;
+      gap: 12px;
     }
 
     .topbar-left {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
 
     .home-link {
@@ -164,6 +176,27 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
+    }
+
+    .reconnect-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(79, 142, 247, 0.3);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: rgba(79, 142, 247, 0.08);
+    }
+
+    .reconnect-btn.visible {
+      display: inline-flex;
     }
 
     .conn-status {
@@ -478,7 +511,7 @@
       height: 100%;
       width: 0;
       background: var(--accent) !important;
-      transition: width .45s ease;
+      transition: width .5s ease, background .5s ease;
     }
 
     #stress-tracker {
@@ -519,6 +552,28 @@
       height: 8px;
       border-radius: 50%;
       background: #474747;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .mic-row-dot.listening {
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.36);
+      animation: micPulse 1.8s ease-out infinite;
+    }
+
+    @keyframes micPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.32);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(79, 142, 247, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(79, 142, 247, 0);
+      }
     }
 
     .waveform {
@@ -630,6 +685,17 @@
       margin-bottom: 6px;
     }
 
+    #transcriptCard {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #transcriptText {
+      flex: 1;
+      min-height: 0;
+    }
+
     .card-pulse {
       border-left-color: var(--accent) !important;
       background: var(--panel-active);
@@ -693,6 +759,157 @@
       max-height: 180px;
       overflow: auto;
       background: var(--panel-active);
+    }
+
+    .mic-hint {
+      color: #7f7f7f;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .powered-gemini {
+      position: fixed;
+      right: 12px;
+      bottom: 10px;
+      z-index: 1200;
+      color: #555;
+      font-size: 12px;
+      letter-spacing: .02em;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @media (max-width: 920px) {
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      .app-shell {
+        min-height: 100dvh;
+      }
+
+      .dashboard.main {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+        padding: 10px;
+      }
+
+      .left-panel,
+      .right-panel.analysis-panel {
+        min-height: auto;
+      }
+
+      .left-panel {
+        grid-template-rows: auto auto auto auto;
+      }
+
+      .mode-strip {
+        padding: 6px 4px;
+      }
+
+      .mode-tabs.header-center {
+        flex-wrap: nowrap;
+        width: max-content;
+      }
+
+      .right-panel.analysis-panel {
+        grid-template-rows: none;
+      }
+
+      .card {
+        width: 100%;
+      }
+
+      .emotion-meter-label {
+        font-size: 19px;
+      }
+
+      .mic-status {
+        font-size: 14px;
+      }
+
+      .topbar {
+        padding: 0 12px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-left {
+        gap: 8px;
+      }
+
+      .home-link,
+      .icon-btn,
+      .speaker-icon {
+        display: none;
+      }
+
+      .logo {
+        font-size: 17px;
+      }
+
+      .conn-status {
+        padding: 6px 10px;
+        font-size: 11px;
+        letter-spacing: .04em;
+      }
+
+      .dashboard.main {
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .left-panel {
+        gap: 10px;
+      }
+
+      .mode-btn {
+        min-width: 104px;
+        height: 34px;
+        font-size: 12px;
+      }
+
+      .emotion-meter-label {
+        font-size: 17px;
+      }
+
+      .card-header,
+      .ct-header,
+      .power-bar-title,
+      .score-ring-label,
+      .whisper-header,
+      .momentum-header,
+      .aa-type,
+      .mn-time,
+      .hc-time {
+        letter-spacing: .14em;
+      }
+
+      .card-body,
+      .ct-tip,
+      .score-ring-desc,
+      .whisper-text,
+      .aa-desc,
+      .mn-text,
+      .hc-subtext {
+        font-size: 14px;
+      }
+
+      .mic-btn {
+        min-height: 56px;
+        width: 100%;
+      }
+
+      .mic-hint {
+        font-size: 11px;
+      }
+
+      .powered-gemini {
+        right: 10px;
+        bottom: 8px;
+        font-size: 11px;
+      }
     }
 
     .lang-badge,
@@ -962,6 +1179,7 @@
           <span class="conn-dot" id="connDot"></span>
           <span id="connLabel">OFFLINE</span>
         </div>
+        <button class="reconnect-btn" id="reconnectBtn" type="button">Reconnect</button>
         <button class="icon-btn" id="historyBtn" title="History">&#128203;</button>
         <span class="speaker-icon" id="speakerIcon">&#128264;</span>
       </div>
@@ -973,10 +1191,11 @@
           <div class="mode-tabs header-center">
             <button class="mode-btn active" data-mode="travel">Travel</button>
             <button class="mode-btn" data-mode="meeting">Meeting</button>
-            <button class="mode-btn" data-mode="present">Present</button>
-            <button class="mode-btn" data-mode="negotiate">Negotiate</button>
             <button class="mode-btn" data-mode="crisis_response">Crisis Response</button>
             <button class="mode-btn" data-mode="hospitality">Hospitality</button>
+            <button class="mode-btn" data-mode="present">Present</button>
+            <button class="mode-btn" data-mode="negotiate">Negotiate</button>
+            
           </div>
         </div>
 
@@ -1021,6 +1240,7 @@
             <div class="bar" style="height:3px"></div>
           </div>
           <button class="mic-btn" id="micBtn" aria-label="Toggle microphone"></button>
+          <div class="mic-hint">Space bar toggles Start/Stop recording</div>
         </div>
       </section>
 
@@ -1124,6 +1344,8 @@
         <button class="export-btn" id="export-notes-btn">Export .txt</button>
       </div>
     </div>
+
+    <div class="powered-gemini">Powered by Gemini</div>
   </div>
 
   <script>
@@ -1140,6 +1362,7 @@
       var reconnectCountdown = 3, noAudioTimer = null;
       var playbackCtx = null, nextPlayTime = 0;
       var screenStream = null, speakerTimer = null;
+      var cameraPermissionStatus = null;
       var exchangeHistory = [], agentActions = [], meetingNotes = [];
       var userLat = 0, userLng = 0;
 
@@ -1154,6 +1377,7 @@
       /* ── DOM ───────────────────────────────────────────────── */
       var $connDot = document.getElementById("connDot");
       var $connLabel = document.getElementById("connLabel");
+      var $reconnectBtn = document.getElementById("reconnectBtn");
       var $video = document.getElementById("video");
       var $canvas = document.getElementById("canvas");
       var $cameraWrap = document.getElementById("cameraWrap");
@@ -1161,6 +1385,7 @@
       var $retryCamera = document.getElementById("retryCamera");
       var $micBtn = document.getElementById("micBtn");
       var $micStatus = document.getElementById("micStatus");
+      var $micRowDot = document.querySelector(".mic-row-dot");
       var $waveform = document.getElementById("waveform");
       var $emotionBadge = document.getElementById("emotionBadge");
       var $emoIcon = document.getElementById("emoIcon");
@@ -1275,6 +1500,100 @@
         document.getElementById("toast-container").appendChild(t);
         requestAnimationFrame(function () { t.classList.add("show"); });
         setTimeout(function () { t.classList.remove("show"); setTimeout(function () { t.remove(); }, 300); }, 5000);
+      }
+
+      function setReconnectButtonVisible(visible) {
+        $reconnectBtn.classList.toggle("visible", !!visible);
+      }
+
+      function setCameraPanelVisible(visible) {
+        document.body.classList.toggle("camera-hidden", !visible);
+      }
+
+      function stopVideoCapture() {
+        if (frameInterval) { clearInterval(frameInterval); frameInterval = null; }
+        if (videoStream && videoStream !== screenStream) {
+          videoStream.getTracks().forEach(function (track) { track.stop(); });
+        }
+        if (videoStream && videoStream === screenStream) {
+          screenStream.getTracks().forEach(function (track) { track.stop(); });
+          screenStream = null;
+        }
+        videoStream = null;
+        $video.srcObject = null;
+      }
+
+      function scrollTranscriptToBottom() {
+        requestAnimationFrame(function () {
+          $transcriptText.scrollTop = $transcriptText.scrollHeight;
+        });
+      }
+
+      function resetOutputCards() {
+        $translationText.textContent = "Awaiting speech...";
+        $subtextText.textContent = "Insight will appear here...";
+        $suggestionText.textContent = "Suggestion will appear here...";
+        $suggestionText.className = "card-body";
+        $subtextText.className = "card-body";
+        $transcriptText.innerHTML = "";
+        $langBadge.style.display = "none";
+      }
+
+      async function refreshCameraAvailability() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setCameraPanelVisible(false);
+          stopVideoCapture();
+          return false;
+        }
+        if (!navigator.permissions || !navigator.permissions.query) {
+          setCameraPanelVisible(false);
+          stopVideoCapture();
+          return false;
+        }
+        try {
+          cameraPermissionStatus = await navigator.permissions.query({ name: "camera" });
+          if (cameraPermissionStatus.onchange === null || typeof cameraPermissionStatus.onchange === "undefined") {
+            cameraPermissionStatus.onchange = function () {
+              refreshCameraAvailability();
+            };
+          }
+          if (cameraPermissionStatus.state === "granted") {
+            setCameraPanelVisible(true);
+            if (!screenStream) await startCamera();
+            return true;
+          }
+        } catch (e) {
+          console.warn("Camera permission query failed", e);
+        }
+        setCameraPanelVisible(false);
+        stopVideoCapture();
+        return false;
+      }
+
+      async function startCamera() {
+        try {
+          if (screenStream) return;
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false
+          });
+          $video.srcObject = videoStream;
+          $video.style.display = "block";
+          $cameraError.style.display = "none";
+          $cameraWrap.classList.add("live");
+          setCameraPanelVisible(true);
+          startFrameCapture();
+        } catch (e) {
+          console.error("Camera error:", e);
+          setCameraPanelVisible(false);
+          stopVideoCapture();
+        }
+      }
+
+      function resetListeningUi() {
+        $micBtn.classList.remove("listening");
+        $micRowDot.classList.remove("listening");
+        $micStatus.textContent = "> ready";
+        bars.forEach(function (b) { b.style.height = "3px"; });
       }
 
       /* ── Mode helpers ──────────────────────────────────────── */
@@ -1625,7 +1944,7 @@
           var p = document.createElement("p");
           p.textContent = text.trim();
           $transcriptText.appendChild(p);
-          $transcriptText.scrollTop = $transcriptText.scrollHeight;
+          scrollTranscriptToBottom();
         }
         logToHistory(exchange);
       }
@@ -1689,7 +2008,7 @@
         if (!msg.text) return;
         var p = document.createElement("p"); p.textContent = msg.text;
         $transcriptText.appendChild(p);
-        $transcriptText.scrollTop = $transcriptText.scrollHeight;
+        scrollTranscriptToBottom();
       }
       function onAudio(msg) {
         if (!msg.data) return;
@@ -1785,6 +2104,7 @@
         ws = new WebSocket(wsUrl());
         ws.onopen = function () {
           setStatus("connected");
+          setReconnectButtonVisible(false);
           hideBanner();
           clearInterval(reconnectTimer); reconnectTimer = null;
           ws.send(JSON.stringify({ type: "mode", mode: currentMode }));
@@ -1794,8 +2114,8 @@
         ws.onmessage = function (ev) {
           try { handleMessage(JSON.parse(ev.data)); } catch (e) { console.warn("Bad WS msg", e); }
         };
-        ws.onclose = function () { setStatus("disconnected"); scheduleReconnect(); };
-        ws.onerror = function () { setStatus("disconnected"); };
+        ws.onclose = function () { setStatus("disconnected"); setReconnectButtonVisible(true); scheduleReconnect(); };
+        ws.onerror = function () { setStatus("disconnected"); setReconnectButtonVisible(true); };
       }
 
       function send(obj) {
@@ -1816,35 +2136,16 @@
       function setStatus(s) {
         $connDot.className = "conn-dot " + (s === "connected" ? "connected" : s === "reconnecting" ? "reconnecting" : "");
         $connLabel.textContent = s === "connected" ? "CONNECTED" : s === "reconnecting" ? "RECONNECTING..." : "OFFLINE";
+        if (s === "connected") setReconnectButtonVisible(false);
       }
       function showBanner(msg) { $connBanner.textContent = msg; $connBanner.classList.add("visible"); }
       function hideBanner() { $connBanner.classList.remove("visible"); }
 
       /* ── Camera ─────────────────────────────────────────────── */
-      async function startCamera() {
-        try {
-          videoStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false
-          });
-          $video.srcObject = videoStream;
-          $video.style.display = "block";
-          $cameraError.style.display = "none";
-          $cameraWrap.classList.add("live");
-          startFrameCapture();
-        } catch (e) {
-          console.error("Camera error:", e);
-          $cameraError.querySelector("p").textContent = e && e.name === "NotAllowedError"
-            ? "Camera access was blocked. Allow permission, then tap [ RETRY ]."
-            : "Enable camera access to use ToneLens.";
-          $video.style.display = "none";
-          $cameraError.style.display = "flex";
-        }
-      }
-
       async function startScreenCapture() {
         try {
           screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-          if (videoStream) { videoStream.getTracks().forEach(function (t) { t.stop(); }); videoStream = null; }
+          stopVideoCapture();
           videoStream = screenStream;
           $video.srcObject = screenStream;
           $video.style.display = "block";
@@ -1859,7 +2160,7 @@
             $consentBanner.classList.remove("visible");
             $meetingSidebar.classList.remove("open");
             screenStream = null; videoStream = null;
-            startCamera();
+            refreshCameraAvailability();
           });
         } catch (e) {
           console.error("Screen capture error:", e);
@@ -1879,8 +2180,6 @@
         }, 2000);
       }
 
-      $retryCamera.addEventListener("click", startCamera);
-
       /* ── Audio ──────────────────────────────────────────────── */
       function startAudioFromStream(stream) {
         try {
@@ -1891,7 +2190,7 @@
           source.connect(analyser);
           processor = audioCtx.createScriptProcessor(4096, 1, 1);
           analyser.connect(processor); processor.connect(audioCtx.destination);
-          isListening = true; $micBtn.classList.add("listening");
+          isListening = true; $micBtn.classList.add("listening"); $micRowDot.classList.add("listening");
           $micStatus.textContent = "> screen_audio...";
           resetNoAudioTimer();
           processor.onaudioprocess = function (e) {
@@ -1917,7 +2216,7 @@
           source.connect(analyser);
           processor = audioCtx.createScriptProcessor(4096, 1, 1);
           analyser.connect(processor); processor.connect(audioCtx.destination);
-          isListening = true; $micBtn.classList.add("listening");
+          isListening = true; $micBtn.classList.add("listening"); $micRowDot.classList.add("listening");
           $micStatus.textContent = "> listening...";
           resetNoAudioTimer();
           processor.onaudioprocess = function (e) {
@@ -1956,9 +2255,7 @@
         if (processor) { processor.disconnect(); processor = null; }
         if (audioCtx) { audioCtx.close().catch(function () { }); audioCtx = null; }
         if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
-        $micBtn.classList.remove("listening");
-        $micStatus.textContent = "> ready";
-        bars.forEach(function (b) { b.style.height = "3px"; });
+        resetListeningUi();
       }
 
       $micBtn.addEventListener("click", function () {
@@ -1984,6 +2281,22 @@
         }, 15000);
       }
 
+      $reconnectBtn.addEventListener("click", function () {
+        clearInterval(reconnectTimer);
+        reconnectTimer = null;
+        hideBanner();
+        connectWS();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        var target = event.target;
+        var tagName = target && target.tagName ? target.tagName.toLowerCase() : "";
+        if (event.code === "Space" && tagName !== "input" && tagName !== "textarea" && !target.isContentEditable) {
+          event.preventDefault();
+          if (isListening) stopAudio(); else startAudio();
+        }
+      });
+
       /* ── Mode buttons ───────────────────────────────────────── */
       document.querySelectorAll(".mode-btn[data-mode]").forEach(function (btn) {
         btn.addEventListener("click", async function () {
@@ -1994,19 +2307,18 @@
           currentMode = newMode;
           send({ type: "mode", mode: currentMode });
           applyModeLabels(currentMode);
+          resetOutputCards();
           if (newMode === "meeting") {
             if (frameInterval) { clearInterval(frameInterval); frameInterval = null; }
-            if (videoStream) { videoStream.getTracks().forEach(function (t) { t.stop(); }); videoStream = null; }
+            stopVideoCapture();
             stopAudio();
             await startScreenCapture();
           } else {
             $consentBanner.classList.remove("visible");
             $meetingSidebar.classList.remove("open");
-            if (screenStream) { screenStream.getTracks().forEach(function (t) { t.stop(); }); screenStream = null; }
-            if (frameInterval) { clearInterval(frameInterval); frameInterval = null; }
-            if (videoStream) { videoStream.getTracks().forEach(function (t) { t.stop(); }); videoStream = null; }
+            stopVideoCapture();
             stopAudio();
-            await startCamera();
+            await refreshCameraAvailability();
             await startAudio();
           }
         });
@@ -2016,7 +2328,7 @@
       async function init() {
         requestGeolocation();
         connectWS();
-        await startCamera();
+        await refreshCameraAvailability();
         await startAudio();
       }
 

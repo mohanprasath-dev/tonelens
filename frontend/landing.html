@@ -173,6 +173,10 @@
       gap: 20px;
     }
 
+    .nav-toggle {
+      display: none;
+    }
+
     .nav-links a {
       color: var(--text-muted);
       font-size: 14px;
@@ -208,6 +212,18 @@
       box-shadow: 0 12px 28px rgba(79, 142, 247, 0.3);
     }
 
+    /* Nav CTA specific style (solid filled, fixed radius/padding) */
+    .nav-cta {
+      border-radius: 8px !important;
+      padding: 10px 20px !important;
+      background: #4F8EF7 !important;
+      color: #ffffff !important;
+      border: none !important;
+      box-shadow: 0 10px 22px rgba(79,142,247,0.22);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
     .btn-secondary {
       border-color: rgba(255, 255, 255, 0.18);
       background: rgba(255, 255, 255, 0.03);
@@ -221,19 +237,31 @@
       align-items: center;
       padding: 152px 0 110px;
       overflow: clip;
+      background: var(--bg);
     }
 
     .hero::before {
       content: "";
       position: absolute;
-      inset: -20% -10%;
+      inset: 0;
       z-index: 0;
-      background:
-        radial-gradient(circle at 35% 35%, rgba(79, 142, 247, 0.3), transparent 48%),
-        radial-gradient(circle at 65% 62%, rgba(79, 142, 247, 0.14), transparent 52%);
-      filter: blur(18px);
-      animation: heroPulse 12s ease-in-out infinite;
+      background: var(--bg);
       pointer-events: none;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      background-image:
+        radial-gradient(rgba(255, 255, 255, 0.14) 0.6px, transparent 0.6px),
+        radial-gradient(rgba(255, 255, 255, 0.08) 0.6px, transparent 0.6px);
+      background-size: 4px 4px, 7px 7px;
+      background-position: 0 0, 1px 1px;
+      mix-blend-mode: soft-light;
     }
 
     @keyframes heroPulse {
@@ -273,12 +301,13 @@
     }
 
     .hero-title {
-      font-size: clamp(42px, 7vw, 72px);
+      font-size: 64px;
       font-weight: 800;
       letter-spacing: -0.05em;
       line-height: 0.98;
       margin: 0 auto;
       max-width: 980px;
+      color: #ffffff;
     }
 
     .hero-title .word {
@@ -303,10 +332,11 @@
     }
 
     .hero-subtitle {
-      max-width: 720px;
+      max-width: 560px;
       margin: 24px auto 0;
-      color: var(--text-muted);
-      font-size: 16px;
+      color: #A0A0A0;
+      font-size: 18px;
+      text-align: center;
     }
 
     .hero-actions {
@@ -493,6 +523,10 @@
     .mode-card {
       padding: 20px;
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
     }
 
     .mode-card.is-active {
@@ -510,13 +544,30 @@
 
     .mode-pill {
       display: inline-flex;
-      border: 1px solid rgba(79, 142, 247, 0.45);
-      color: var(--accent);
       border-radius: 999px;
       padding: 6px 10px;
       font-size: 12px;
       font-weight: 600;
       margin-top: 10px;
+      align-self: flex-start;
+    }
+
+    .mode-pill--default {
+      background: rgba(79,142,247,0.10);
+      color: #4F8EF7;
+      border: 1px solid rgba(79,142,247,0.22);
+    }
+
+    .mode-pill--crisis {
+      background: rgba(239,68,68,0.10);
+      color: #EF4444;
+      border: 1px solid rgba(239,68,68,0.18);
+    }
+
+    .mode-pill--hospitality {
+      background: rgba(16,185,129,0.10);
+      color: #10B981;
+      border: 1px solid rgba(16,185,129,0.18);
     }
 
     .mode-panel {
@@ -564,26 +615,38 @@
     }
 
     footer {
-      border-top: 1px solid var(--border);
-      padding: 28px 0 42px;
-      color: var(--text-muted);
+      border-top: 1px solid #1A1A1A;
+      padding: 24px 0;
+      color: #555555;
+      background: transparent;
     }
 
     .footer-inner {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       gap: 20px;
       flex-wrap: wrap;
       font-size: 14px;
     }
 
-    .footer-inner a {
-      color: var(--text-muted);
-      transition: color 0.2s ease;
+    .footer-left {
+      color: #888888;
+      font-weight: 600;
     }
 
-    .footer-inner a:hover {
+    .footer-links {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: #aaaaaa;
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
       color: #ffffff;
     }
 
@@ -624,8 +687,46 @@
         padding: 8px 8px 8px 14px;
       }
 
-      .nav-links a:not(.nav-cta) {
+
+      /* Mobile: show only CTA by default, toggle reveals others */
+      .nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.04);
+        color: #fff;
+        font-size: 20px;
+        margin-left: 8px;
+      }
+
+      .nav-links {
+        position: absolute;
+        right: 12px;
+        top: 64px;
         display: none;
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(10,10,10,0.95);
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.04);
+        width: calc(100% - 40px);
+        max-width: 320px;
+      }
+
+      .site-nav.open .nav-links {
+        display: flex;
+      }
+
+      .nav-links a:not(.nav-cta) {
+        display: block;
+        color: var(--text-muted);
+        padding: 8px 10px;
+        border-radius: 8px;
       }
 
       .hero {
@@ -678,6 +779,7 @@
         <a href="/about" class="nav-transition">About</a>
         <a href="/app" class="btn btn-primary nav-transition nav-cta">Launch App</a>
       </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">☰</button>
     </div>
   </nav>
 
@@ -850,37 +952,37 @@
           <article class="mode-card is-active reveal" data-reveal data-mode="travel" tabindex="0">
             <h3 class="mode-name">Travel</h3>
             <p class="mode-description">Navigate unfamiliar places with calm, context-aware communication.</p>
-            <span class="mode-pill">Guidance</span>
+            <span class="mode-pill mode-pill--default">Guidance</span>
           </article>
 
           <article class="mode-card reveal" data-reveal data-mode="meeting" tabindex="0">
             <h3 class="mode-name">Meeting</h3>
             <p class="mode-description">Track sentiment shifts and key decisions while discussions evolve.</p>
-            <span class="mode-pill">Clarity</span>
+            <span class="mode-pill mode-pill--default">Clarity</span>
           </article>
 
           <article class="mode-card reveal" data-reveal data-mode="present" tabindex="0">
             <h3 class="mode-name">Present</h3>
             <p class="mode-description">Get pacing and tone feedback to deliver with confidence.</p>
-            <span class="mode-pill">Delivery</span>
+            <span class="mode-pill mode-pill--default">Delivery</span>
           </article>
 
           <article class="mode-card reveal" data-reveal data-mode="negotiate" tabindex="0">
             <h3 class="mode-name">Negotiate</h3>
             <p class="mode-description">Spot leverage moments and likely bluffs in real time.</p>
-            <span class="mode-pill">Strategy</span>
+            <span class="mode-pill mode-pill--default">Strategy</span>
           </article>
 
           <article class="mode-card reveal" data-reveal data-mode="crisis" tabindex="0">
             <h3 class="mode-name">Crisis Response</h3>
             <p class="mode-description">Maintain composure with concise guidance under pressure.</p>
-            <span class="mode-pill">Stability</span>
+            <span class="mode-pill mode-pill--crisis">Stability</span>
           </article>
 
           <article class="mode-card reveal" data-reveal data-mode="hospitality" tabindex="0">
             <h3 class="mode-name">Hospitality</h3>
             <p class="mode-description">Deliver warm service with nuanced multilingual understanding.</p>
-            <span class="mode-pill">Service</span>
+            <span class="mode-pill mode-pill--hospitality">Service</span>
           </article>
         </div>
 
@@ -906,11 +1008,13 @@
   <footer>
     <div class="container">
       <div class="footer-inner">
-        <a href="/about" class="nav-transition">About</a>
-        <a href="/app" class="nav-transition">Launch App</a>
-        <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://linkedin.com/in/mohanprasath21" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://devpost.com/software/tonelens" target="_blank" rel="noopener">Devpost</a>
+        <div class="footer-left">ToneLens — Real-time Emotional Intelligence</div>
+        <div class="footer-links">
+          <a href="/about" class="nav-transition">About</a>
+          <a href="https://github.com/mohanprasath-dev/tonelens" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://linkedin.com/in/mohanprasath21" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://mohanprasath.dev" target="_blank" rel="noopener">Portfolio</a>
+        </div>
       </div>
     </div>
   </footer>
@@ -1039,6 +1143,30 @@
           }
         });
       });
+
+      // Mobile nav toggle
+      var navToggle = document.getElementById('nav-toggle');
+      var siteNav = document.getElementById('navbar');
+      if (navToggle && siteNav) {
+        navToggle.addEventListener('click', function (e) {
+          e.stopPropagation();
+          siteNav.classList.toggle('open');
+        });
+
+        // close menu when clicking a nav link
+        document.querySelectorAll('.nav-links a').forEach(function (a) {
+          a.addEventListener('click', function () {
+            siteNav.classList.remove('open');
+          });
+        });
+
+        // close when clicking outside
+        document.addEventListener('click', function (ev) {
+          if (!siteNav.contains(ev.target)) {
+            siteNav.classList.remove('open');
+          }
+        });
+      }
     })();
   </script>
 </body>
