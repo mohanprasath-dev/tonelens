@@ -325,6 +325,16 @@
       color: #fff;
     }
 
+    .mode-btn[data-mode="crisis_response"].active {
+      border-color: #EF4444;
+      background: #EF4444;
+    }
+
+    .mode-btn[data-mode="hospitality"].active {
+      border-color: #10B981;
+      background: #10B981;
+    }
+
     .mode-btn.mode-disabled {
       opacity: .55;
       cursor: default;
@@ -965,8 +975,8 @@
             <button class="mode-btn" data-mode="meeting">Meeting</button>
             <button class="mode-btn" data-mode="present">Present</button>
             <button class="mode-btn" data-mode="negotiate">Negotiate</button>
-            <button class="mode-btn mode-disabled" type="button">Crisis Response</button>
-            <button class="mode-btn mode-disabled" type="button">Hospitality</button>
+            <button class="mode-btn" data-mode="crisis_response">Crisis Response</button>
+            <button class="mode-btn" data-mode="hospitality">Hospitality</button>
           </div>
         </div>
 
