@@ -1,10 +1,27 @@
+## Solution Challenge 2026 — Rapid Crisis Response
+
+> Submitted under [Rapid Crisis Response] Open Innovation track — Google Solution Challenge 2026, hosted on Hack2Skill.
+
+**Problem:** Hospitality venues face life-threatening emergencies where language barriers and fragmented communication between panicked guests, staff, and first responders create dangerous delays. No existing tool detects emotional distress in real time across languages.
+
+**Solution:** ToneLens is a real-time emotional intelligence agent that detects panic, urgency, and distress in spoken communication across any language — surfacing instant translation, emotion readings, urgency levels, and staff response suggestions in under 2 seconds. Deployed on Google Cloud Run. No app install required.
+
+**Google Technologies Used:**
+- Gemini Live API (gemini-2.5-flash-native-audio-latest) — real-time multimodal streaming
+- Vertex AI (gemini-2.0-flash) — structured output reformatting
+- Google Cloud Run — serverless deployment
+- Google Cloud Firestore — session memory
+- Google ADK — agent framework
+
+---
+
 # ToneLens
 
 > Google Translate tells you the words. ToneLens tells you the truth.
 
-ToneLens is a real-time emotional intelligence web app built for the Gemini Live Agent Challenge 2026. It watches a conversation through the browser camera, listens to live audio, streams both to Gemini Live, reformats the model output into a strict UI-friendly structure, and surfaces translation, emotion, subtext, tactical suggestions, agent actions, history, and audio playback in one interface.
+ToneLens is a real-time emotional intelligence web app built for the Google Solution Challenge 2026. It watches a conversation through the browser camera, listens to live audio, streams both to Gemini Live, reformats the model output into a strict UI-friendly structure, and surfaces translation, emotion, subtext, tactical suggestions, agent actions, history, and audio playback in one interface.
 
-Live URL: [https://tonelens-z2mk33hdtq-uc.a.run.app](https://tonelens-z2mk33hdtq-uc.a.run.app)
+Live URL: [https://tonelens.mohanprasath.dev](https://tonelens.mohanprasath.dev)
 
 ## What Is In The Code
 
@@ -14,7 +31,7 @@ The current app implements:
 - A WebSocket endpoint at `/ws/{session_id}` for live camera, microphone, mode, and location streaming.
 - A Gemini Live bridge using `gemini-2.5-flash-native-audio-latest` with `response_modalities=["AUDIO"]`.
 - A second-pass formatter using Vertex AI `gemini-2.0-flash` to coerce live output into strict labeled lines.
-- Four user modes: travel, meeting, present, negotiate.
+- Six user modes: travel, meeting, present, negotiate, crisis_response, hospitality.
 - Keyword-driven agent actions for cultural tips, emergency help, meeting-note capture, and stress reporting.
 - Firestore-backed session history and meeting notes.
 - A vanilla HTML/CSS/JS frontend with live camera, live microphone, stress graph, history sidebar, meeting-notes sidebar, negotiation power balance, score ring, whisper coach, transcript feed, and real-time audio playback.
@@ -67,12 +84,14 @@ What the running code does:
 
 ## Modes
 
-The live prompts in `backend/gemini_bridge.py` define four actual operating modes:
+The live prompts in `backend/gemini_bridge.py` define six actual operating modes:
 
 - `travel`: translation, emotion, subtext, suggestion
 - `meeting`: same four-line structure, plus meeting-note capture and screen-audio workflow in the frontend
 - `present`: filler-word detection, pace analysis, and coaching tips
 - `negotiate`: translation, emotion, tactical subtext, power score, and negotiation suggestion
+- `crisis_response`: detects panic, fear, urgency in speech. Flags emergency keywords. Rates urgency LOW/MEDIUM/HIGH/CRITICAL. Suggests de-escalation responses for staff.
+- `hospitality`: detects guest frustration and confusion in any language. Suggests warm, culturally-aware, service-oriented responses.
 
 ## Agent Helpers
 
@@ -268,6 +287,7 @@ From the app content itself:
 - Age: 18
 - Location: Chennai, India
 - Education: B.Tech CSE (AI & ML)
+- Portfolio: [https://mohanprasath.dev](https://mohanprasath.dev)
 
 ## Why This Build Stands Out
 
@@ -280,6 +300,11 @@ ToneLens is not a static demo site. The current codebase already ships a real mu
 - Firestore session memory
 - emergency and cultural-action side effects
 - mobile-optimized landing, about, and app pages
+- Six purpose-built AI modes, each with a distinct Gemini system prompt tuned for a specific context
+- Crisis Response mode flags urgency level (LOW/MEDIUM/HIGH/CRITICAL) in real time
+- Hospitality mode detects guest frustration across any language with culturally-aware suggestions
+- Camera is fully optional — app works via voice only, camera panel hides gracefully if denied
+- Mobile responsive — works on any device, no installation
 
 This repo is already in a shape where a judge can open the landing page, launch the app, grant camera/mic access, and see a working multimodal interaction pipeline.
 
