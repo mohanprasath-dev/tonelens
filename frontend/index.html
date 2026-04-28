@@ -10,14 +10,12 @@
   <meta property="og:description" content="Google Translate tells you the words. ToneLens tells you the truth." />
   <meta property="og:type" content="website" />
   <meta property="og:image"
-    content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' fill='%23000'><rect width='1200' height='630'/><text x='600' y='315' text-anchor='middle' fill='%2300f0ff' font-size='80' font-family='monospace'>ToneLens</text></svg>" />
+    content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect width='1200' height='630' fill='%230A0A0A'/><text x='600' y='315' text-anchor='middle' fill='%234F8EF7' font-size='80' font-family='Inter,sans-serif'>ToneLens</text></svg>" />
   <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='18' fill='%2300f0ff'>TL</text></svg>" />
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230A0A0A'/><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle' font-family='Inter,sans-serif' font-weight='700' font-size='14' fill='%234F8EF7'>TL</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <style>
     *,
@@ -25,205 +23,161 @@
     *::after {
       box-sizing: border-box;
       margin: 0;
-      padding: 0
-    }
-
-    ::selection {
-      background: #00f0ff;
-      color: #000
+      padding: 0;
     }
 
     :root {
-      --bg: #000;
-      --surface: #0a0a0a;
-      --border: #1a1a1a;
-      --cyan: #00f0ff;
-      --cyan2: #00b8cc;
-      --dim: #003333;
-      --cyan-glow: 0 0 20px rgba(0, 240, 255, 0.3);
-      --text: #fff;
-      --text2: #888;
-      --text3: #444;
-      --danger: #ff3333;
-      --warning: #ffaa00;
-      --font-mono: 'JetBrains Mono', monospace;
-      --font-body: 'Inter', sans-serif;
-      --radius: 8px;
-      --inner-shadow: inset 0 -4px 12px rgba(0, 0, 0, 0.5);
-      --transition: .25s cubic-bezier(.4, 0, .2, 1);
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--bg)
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(0, 240, 255, 0.3);
-      border-radius: 4px;
-      border: 2px solid var(--bg)
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--cyan)
+      --bg: #0a0a0a;
+      --panel: #111111;
+      --panel-active: #161616;
+      --border: #1e1e1e;
+      --text: #ffffff;
+      --muted: #a0a0a0;
+      --label: #555555;
+      --accent: #4f8ef7;
+      --danger: #ff4d4f;
+      --warning: #f59e0b;
+      --green: #22c55e;
+      --radius: 12px;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
 
     html,
     body {
       height: 100%;
-      font-family: var(--font-body);
+      overflow: hidden;
       background: var(--bg);
       color: var(--text);
-      overflow: hidden;
+      font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased;
-      cursor: default;
+    }
+
+    body {
       opacity: 0;
-      animation: fadeIn 0.5s var(--transition) forwards;
+      animation: fadeIn .35s ease forwards;
     }
 
     @keyframes fadeIn {
       to {
-        opacity: 1
+        opacity: 1;
       }
     }
 
-    body.page-exit {
-      opacity: 0;
-      transition: opacity 0.3s var(--transition)
-    }
-
     a {
-      color: var(--cyan);
-      text-decoration: none;
-      cursor: pointer
-    }
-
-    a:hover {
-      text-decoration: underline
-    }
-
-    a:active {
-      transform: scale(0.96)
-    }
-
-    /* Scanline */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      pointer-events: none;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 240, 255, 0.015) 2px, rgba(0, 240, 255, 0.015) 4px)
-    }
-
-    /* ── Header ───────────────────────────────────────────── */
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 16px;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      z-index: 100
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px
-    }
-
-    .home-link {
-      font-family: var(--font-mono);
-      font-size: .75rem;
-      color: var(--text3);
-      transition: color var(--transition)
-    }
-
-    .home-link:hover {
-      color: var(--cyan);
-      text-decoration: none
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--cyan)
-    }
-
-    .logo a {
       color: inherit;
       text-decoration: none;
     }
 
-    .logo-cursor {
-      display: inline-block;
-      width: 8px;
-      height: 14px;
-      background: var(--cyan);
-      animation: blink .8s step-end infinite
-    }
-
-    @keyframes blink {
-      50% {
-        opacity: 0
-      }
-    }
-
-    .header-center {
-      display: flex;
-      gap: 4px
-    }
-
-    .mode-btn {
-      font-family: var(--font-mono);
-      padding: 5px 12px;
-      border: 1px solid var(--cyan);
-      background: transparent;
-      color: var(--cyan);
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: 0;
       cursor: pointer;
-      font-size: .75rem;
-      font-weight: 600;
-      transition: all var(--transition);
-      border-radius: 4px
     }
 
-    .mode-btn:hover {
-      background: rgba(0, 240, 255, 0.08);
-      color: var(--cyan);
-      box-shadow: var(--cyan-glow)
+    #conn-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1600;
+      padding: 7px 10px;
+      text-align: center;
+      font-size: 12px;
+      background: rgba(255, 77, 79, 0.93);
+      color: #fff;
+      transform: translateY(-120%);
+      transition: transform .2s ease;
     }
 
-    .mode-btn.active {
-      border-color: var(--cyan);
-      color: #000;
-      background: var(--cyan);
-      box-shadow: var(--cyan-glow)
+    #conn-banner.visible {
+      transform: translateY(0);
     }
 
-    .header-right {
+    #consent-banner {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.15);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    #consent-banner.visible {
+      display: flex;
+    }
+
+    #consent-banner button {
+      font-size: 18px;
+      line-height: 1;
+      opacity: .8;
+    }
+
+    .app-shell {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 60px;
       display: flex;
       align-items: center;
-      gap: 10px
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1a;
+      background: #0d0d0d;
+      flex-shrink: 0;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .home-link {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #242424;
+      transition: border-color .2s ease, color .2s ease;
+    }
+
+    .home-link:hover {
+      border-color: #303030;
+      color: #fff;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .conn-status {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--text3)
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid #242424;
+      font-size: 12px;
+      color: #d0d0d0;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 600;
     }
 
     .conn-dot {
@@ -231,314 +185,175 @@
       height: 8px;
       border-radius: 50%;
       background: var(--danger);
-      transition: all var(--transition)
+      transition: all .2s ease;
     }
 
     .conn-dot.connected {
-      background: #28ca42;
-      box-shadow: 0 0 8px rgba(40, 202, 66, 0.5);
-      animation: pulse 2s infinite
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
     }
 
     .conn-dot.reconnecting {
       background: var(--warning);
-      animation: pulse 1s infinite
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: .4
-      }
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
     }
 
     .icon-btn {
-      width: 30px;
-      height: 30px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text3);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .9rem;
-      transition: all var(--transition)
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid #242424;
+      color: var(--muted);
+      transition: all .2s ease;
     }
 
     .icon-btn:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      color: var(--cyan)
+      border-color: #303030;
+      color: #fff;
     }
 
     .speaker-icon {
-      font-size: .9rem;
-      cursor: default;
-      color: var(--text3);
-      transition: all var(--transition)
+      font-size: 14px;
+      color: var(--muted);
     }
 
     .speaker-icon.speaking {
-      color: var(--cyan);
-      animation: speakPulse .5s infinite alternate
+      color: var(--accent);
+      animation: speakPulse .5s infinite alternate;
     }
 
     @keyframes speakPulse {
       from {
         opacity: 1;
-        transform: scale(1)
       }
 
       to {
-        opacity: .4;
-        transform: scale(1.15)
+        opacity: .45;
       }
     }
 
-    /* ── Main layout ──────────────────────────────────────── */
-    .main {
-      display: flex;
-      height: calc(100vh - 41px);
-      overflow: hidden
-    }
-
-    /* ── Sidebars ─────────────────────────────────────────── */
-    .sidebar {
-      width: 0;
-      overflow: hidden;
-      transition: width .3s ease;
-      flex-shrink: 0;
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(16px);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column
-    }
-
-    .sidebar.open {
-      width: 260px
-    }
-
-    .sidebar-hdr {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: .78rem;
-      color: var(--cyan);
-      font-weight: 600;
-      white-space: nowrap;
-      flex-shrink: 0
-    }
-
-    .sidebar-hdr button {
-      background: none;
-      border: none;
-      color: var(--text3);
-      font-size: 1rem;
-      cursor: pointer;
-      padding: 2px 6px;
-      transition: color var(--transition)
-    }
-
-    .sidebar-hdr button:hover {
-      color: var(--cyan)
-    }
-
-    .sidebar-list {
+    .dashboard.main {
       flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px
-    }
-
-    .sidebar-list::-webkit-scrollbar {
-      width: 4px
-    }
-
-    .sidebar-list::-webkit-scrollbar-thumb {
-      background: rgba(0, 240, 255, 0.2);
-      border-radius: 2px
-    }
-
-    .sidebar-list::-webkit-scrollbar-thumb:hover {
-      background: var(--cyan)
-    }
-
-    /* History cards */
-    .history-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 10px;
-      font-size: .78rem;
-      line-height: 1.5;
-      transition: all var(--transition);
-      animation: slideUp .3s ease forwards
-    }
-
-    .history-card:hover {
-      border-color: rgba(0, 240, 255, 0.2)
-    }
-
-    .hc-time {
-      color: var(--cyan);
-      font-family: var(--font-mono);
-      font-size: .7rem;
-      margin-bottom: 3px
-    }
-
-    .hc-emotion {
-      font-weight: 600;
-      margin-bottom: 2px
-    }
-
-    .hc-subtext {
-      color: var(--text3);
-      white-space: nowrap;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 38% 62%;
+      gap: 12px;
+      padding: 12px;
       overflow: hidden;
-      text-overflow: ellipsis
     }
 
-    .hc-empty {
-      color: var(--text3);
-      font-family: var(--font-mono);
-      font-size: .78rem;
-      padding: 16px 8px;
-      font-style: normal
+    .left-panel,
+    .right-panel {
+      min-height: 0;
+      animation: panelIn .35s ease both;
     }
 
-    @keyframes slideUp {
+    .right-panel {
+      animation-delay: .05s;
+    }
+
+    @keyframes panelIn {
       from {
         opacity: 0;
-        transform: translateY(8px)
+        transform: translateY(8px);
       }
 
       to {
         opacity: 1;
-        transform: translateY(0)
+        transform: translateY(0);
       }
     }
 
-    /* Meeting notes */
-    .meeting-note-item {
-      background: var(--surface);
+    .left-panel {
+      display: grid;
+      grid-template-rows: auto minmax(220px, 1fr) auto auto;
+      gap: 12px;
+    }
+
+    .mode-strip,
+    .emotion-meter,
+    .mic-area,
+    .camera-wrap,
+    .card,
+    #cultural-tip-card,
+    .power-bar-wrap,
+    .score-ring-wrap,
+    .whisper-panel,
+    .momentum-wrap,
+    #agent-actions-card,
+    .meeting-note-item,
+    .history-card {
+      background: var(--panel);
       border: 1px solid var(--border);
-      padding: 10px;
-      font-size: .8rem;
-      line-height: 1.4;
-      border-left: 2px solid var(--cyan);
-      animation: slideUp .3s ease forwards
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
     }
 
-    .mn-time {
-      color: var(--cyan);
-      font-family: var(--font-mono);
-      font-size: .7rem;
-      margin-bottom: 4px
+    .mode-strip {
+      padding: 5px;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
 
-    .mn-emotion {
-      display: inline-block;
-      padding: 1px 6px;
-      font-size: .68rem;
-      background: var(--dim);
-      color: var(--cyan);
-      font-family: var(--font-mono);
-      margin-bottom: 4px
+    .mode-strip::-webkit-scrollbar {
+      display: none;
     }
 
-    .mn-text {
-      color: var(--text)
-    }
-
-    .export-btn {
-      margin: 8px;
-      padding: 8px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text3);
-      cursor: pointer;
-      font-size: .78rem;
-      font-family: var(--font-mono);
-      transition: all var(--transition);
-      text-align: center
-    }
-
-    .export-btn:hover {
-      border-color: var(--cyan);
-      color: var(--cyan)
-    }
-
-    /* ── Camera + Mic panel ───────────────────────────────── */
-    .camera-panel {
-      flex: 0 0 50%;
+    .mode-tabs.header-center {
       display: flex;
-      flex-direction: column;
-      padding: 10px;
-      gap: 8px
-    }
-
-    .analysis-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
       gap: 8px;
-      padding: 10px;
-      overflow-y: auto
+      width: max-content;
     }
 
-    .analysis-panel::-webkit-scrollbar {
-      width: 6px
+    .mode-btn {
+      min-width: 114px;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid #2a2a2a;
+      background: #1a1a1a;
+      color: #d0d0d0;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .2s ease;
+      white-space: nowrap;
     }
 
-    .analysis-panel::-webkit-scrollbar-thumb {
-      background: rgba(0, 240, 255, 0.2);
-      border-radius: 3px
+    .mode-btn.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
     }
 
-    .analysis-panel::-webkit-scrollbar-thumb:hover {
-      background: var(--cyan)
+    .mode-btn.mode-disabled {
+      opacity: .55;
+      cursor: default;
     }
 
     .camera-wrap {
-      position: relative;
-      flex: 1;
       overflow: hidden;
-      background: #000;
-      border: 1px solid var(--border);
-      transition: all var(--transition)
+      position: relative;
+      border-radius: 12px;
     }
 
     .camera-wrap.live {
-      border-color: var(--cyan);
-      box-shadow: 0 0 24px rgba(0, 240, 255, 0.15)
+      border-color: #2b3f63;
     }
 
     .camera-wrap.emergency {
       border-color: var(--danger) !important;
-      animation: emergFlash .5s infinite !important
+      animation: emergencyFlash .6s infinite;
     }
 
-    @keyframes emergFlash {
+    @keyframes emergencyFlash {
 
       0%,
       100% {
-        border-color: var(--danger);
-        box-shadow: 0 0 30px rgba(255, 51, 51, .5)
+        box-shadow: 0 0 0 1px rgba(255, 77, 79, .55), 0 0 16px rgba(255, 77, 79, .3);
       }
 
       50% {
-        border-color: #ff6b6b;
-        box-shadow: 0 0 50px rgba(255, 51, 51, .2)
+        box-shadow: 0 0 0 1px rgba(255, 77, 79, .85), 0 0 24px rgba(255, 77, 79, .45);
       }
     }
 
@@ -546,1235 +361,560 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block
+      display: block;
     }
 
-    canvas#canvas {
-      display: none
+    #canvas {
+      display: none;
     }
 
-    /* Emotion badge */
     .emotion-badge {
       position: absolute;
-      bottom: 10px;
       left: 10px;
+      bottom: 10px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      background: rgba(0, 0, 0, .75);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      font-size: .82rem;
-      transition: all var(--transition);
-      transform: scale(0);
+      gap: 8px;
+      padding: 7px 11px;
+      border-radius: 10px;
+      border: 1px solid #2b2b2b;
+      background: rgba(10, 10, 10, .84);
+      color: #fff;
+      font-size: 13px;
       opacity: 0;
-      font-family: var(--font-mono)
+      transform: translateY(6px);
+      transition: opacity .2s ease, transform .2s ease;
     }
 
     .emotion-badge.visible {
-      transform: scale(1);
-      opacity: 1
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .emotion-badge .emo-icon {
-      font-size: 1.1rem
-    }
-
-    .emotion-badge .emo-label {
+    .emo-label {
+      color: var(--accent) !important;
       font-weight: 600;
-      color: var(--cyan)
     }
 
-    .emotion-badge .emo-conf {
-      color: var(--text3);
-      font-size: .72rem
+    .emo-conf {
+      color: #9a9a9a;
+      font-size: 12px;
     }
 
-    /* Camera error */
     .camera-error {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 14px;
-      color: var(--text3)
-    }
-
-    .camera-error .icon {
-      font-size: 2.5rem
-    }
-
-    .camera-error p {
+      gap: 10px;
+      padding: 16px;
+      color: var(--muted);
       text-align: center;
-      max-width: 240px;
-      font-size: .85rem
+      font-size: 14px;
     }
 
     .retry-btn {
-      font-family: var(--font-mono);
-      padding: 8px 20px;
-      border: 1px solid var(--cyan);
-      background: transparent;
-      color: var(--cyan);
-      cursor: pointer;
-      font-size: .82rem;
-      transition: all var(--transition)
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid #2f4d83;
+      color: var(--accent);
+      font-size: 13px;
+      transition: background .2s ease;
     }
 
     .retry-btn:hover {
-      background: var(--cyan);
-      color: #000
+      background: rgba(79, 142, 247, .14);
     }
 
-    /* Emotion meter */
     .emotion-meter {
-      padding: 10px 14px;
-      background: rgba(0, 10, 0, 0.8);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(20px);
-      transition: all var(--transition);
-      box-shadow: var(--inner-shadow)
-    }
-
-    .emotion-meter:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), var(--inner-shadow)
+      padding: 12px;
+      display: grid;
+      gap: 10px;
     }
 
     .emotion-meter-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px
+      gap: 8px;
     }
 
     .emotion-meter-label {
-      font-size: .75rem;
-      color: var(--text2);
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      font-weight: 600
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: #f0f0f0;
     }
 
     .stress-toggle-btn {
-      font-family: var(--font-mono);
-      font-size: .68rem;
-      padding: 2px 8px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text3);
-      cursor: pointer;
-      transition: all var(--transition)
-    }
-
-    .stress-toggle-btn:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      color: var(--cyan)
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid #2a2a2a;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .emotion-meter-track {
-      height: 6px;
-      background: rgba(255, 255, 255, 0.05);
+      height: 11px;
+      border-radius: 999px;
+      background: #1f1f1f;
+      border: 1px solid #2a2a2a;
       overflow: hidden;
-      border-radius: 3px
     }
 
     .emotion-meter-fill {
       height: 100%;
       width: 0;
-      background: var(--cyan);
-      transition: width .5s ease, background-color .5s ease
+      background: var(--accent) !important;
+      transition: width .45s ease;
     }
 
-    /* Stress tracker */
     #stress-tracker {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      overflow: hidden;
       max-height: 0;
-      transition: max-height .4s ease, padding .4s ease;
-      padding: 0
+      overflow: hidden;
+      transition: max-height .3s ease, margin-top .3s ease;
     }
 
     #stress-tracker.open {
-      max-height: 160px;
-      padding: 10px
+      max-height: 140px;
+      margin-top: 2px;
     }
 
     .stress-chart-wrap {
       height: 120px;
-      position: relative
+      border-radius: 10px;
+      border: 1px solid #2a2a2a;
+      background: #151515;
+      padding: 6px;
     }
 
-    /* Mic area */
     .mic-area {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mic-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 8px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border)
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .mic-row-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #474747;
     }
 
     .waveform {
       display: flex;
       align-items: flex-end;
-      gap: 3px;
-      height: 26px
+      gap: 4px;
+      height: 26px;
     }
 
     .waveform .bar {
-      width: 3px;
-      background: var(--cyan);
+      width: 4px;
       min-height: 3px;
-      opacity: .6;
-      transition: height .1s ease
+      border-radius: 999px;
+      background: var(--accent);
+      transition: height .1s ease;
     }
 
     .mic-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 2px solid var(--cyan);
-      background: transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      color: var(--cyan);
-      transition: all var(--transition);
-      flex-shrink: 0
+      width: 100%;
+      min-height: 50px;
+      border-radius: 11px;
+      border: 1px solid #30508a;
+      background: linear-gradient(180deg, rgba(79, 142, 247, .22), rgba(79, 142, 247, .08));
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
     }
 
-    .mic-btn:hover {
-      background: var(--dim);
-      box-shadow: var(--cyan-glow)
+    .mic-btn::before {
+      content: "Start";
     }
 
     .mic-btn.listening {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #fff;
-      box-shadow: 0 0 20px rgba(255, 51, 51, 0.4);
-      animation: pulseMic 1.5s infinite
+      border-color: rgba(255, 77, 79, .7);
+      background: linear-gradient(180deg, rgba(255, 77, 79, .25), rgba(255, 77, 79, .1));
     }
 
-    @keyframes pulseMic {
-
-      0%,
-      100% {
-        box-shadow: 0 0 20px rgba(255, 51, 51, 0.4)
-      }
-
-      50% {
-        box-shadow: 0 0 30px rgba(255, 51, 51, 0.6)
-      }
+    .mic-btn.listening::before {
+      content: "Stop";
     }
 
     .mic-status {
-      font-size: .72rem;
-      color: var(--text3);
-      font-family: var(--font-mono)
+      font-size: 13px;
+      color: var(--muted);
     }
 
-    /* ── Glass Cards ──────────────────────────────────────── */
+    .right-panel.analysis-panel {
+      display: grid;
+      grid-template-rows: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
     .card {
-      background: rgba(0, 10, 0, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 14px;
-      transition: all var(--transition);
-      box-shadow: var(--inner-shadow)
+      padding: 13px;
+      border-left: 3px solid transparent;
+      transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+      min-height: 0;
     }
 
-    .card:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), var(--inner-shadow)
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--text3);
+    .card-header,
+    .ct-header,
+    .power-bar-title,
+    .score-ring-label,
+    .whisper-header,
+    .momentum-header,
+    .aa-type,
+    .mn-time,
+    .hc-time {
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 600
+      letter-spacing: .18em;
+      color: var(--label);
+      font-weight: 700;
+      margin-bottom: 8px;
     }
 
-    .card-body {
-      font-size: .9rem;
-      line-height: 1.6;
-      min-height: 18px
+    .card-body,
+    .ct-tip,
+    .score-ring-desc,
+    .whisper-text,
+    .aa-desc,
+    .mn-text,
+    .hc-subtext {
+      font-size: 15px;
+      color: #e0e0e0;
+      line-height: 1.5;
     }
 
-    .lang-badge {
-      display: inline-block;
-      padding: 1px 8px;
-      font-size: .68rem;
-      font-weight: 500;
-      background: var(--dim);
-      color: var(--cyan);
-      font-family: var(--font-mono);
-      margin-bottom: 4px
+    #translationText,
+    #subtextText,
+    #suggestionText {
+      min-height: 26px;
+    }
+
+    #transcriptText {
+      height: 100%;
+      overflow-y: auto;
+      font-size: 13px;
+      color: #bdbdbd;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      line-height: 1.55;
+      padding-right: 4px;
+    }
+
+    #transcriptText p {
+      margin-bottom: 6px;
     }
 
     .card-pulse {
-      animation: cpulse 1.5s ease
-    }
-
-    @keyframes cpulse {
-
-      0%,
-      100% {
-        border-left-color: var(--border);
-        box-shadow: var(--inner-shadow)
-      }
-
-      50% {
-        border-left-color: var(--cyan);
-        box-shadow: -4px 0 16px rgba(0, 240, 255, 0.3), var(--inner-shadow)
-      }
+      border-left-color: var(--accent) !important;
+      background: var(--panel-active);
+      box-shadow: 0 0 0 1px rgba(79, 142, 247, 0.2), 0 10px 26px rgba(0, 0, 0, 0.35);
     }
 
     .slide-in {
-      animation: slideIn .3s ease forwards
+      animation: slideIn .2s ease;
     }
 
     @keyframes slideIn {
       from {
         opacity: 0;
-        transform: translateX(12px)
+        transform: translateY(5px);
       }
 
       to {
         opacity: 1;
-        transform: translateX(0)
+        transform: translateY(0);
       }
     }
 
-    /* ── Negotiate panel ──────────────────────────────────── */
+    #cultural-tip-card {
+      display: none;
+      position: fixed;
+      top: 74px;
+      right: 12px;
+      width: min(360px, calc(100% - 24px));
+      z-index: 1250;
+      padding: 12px;
+      border-left: 3px solid var(--accent);
+    }
+
+    #cultural-tip-card.visible {
+      display: block;
+    }
+
     #negotiate-panel {
       display: none;
-      flex-direction: column;
-      gap: 8px
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(760px, calc(100% - 24px));
+      z-index: 1240;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
     }
 
     #negotiate-panel.visible {
-      display: flex
+      display: grid;
     }
 
-    /* Power bar */
-    .power-bar-wrap {
-      background: rgba(0, 10, 0, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 14px;
-      transition: all var(--transition);
-      box-shadow: var(--inner-shadow)
+    #agent-actions-card {
+      position: fixed;
+      right: 12px;
+      bottom: 14px;
+      width: min(360px, calc(100% - 24px));
+      z-index: 1235;
+      max-height: 180px;
+      overflow: auto;
+      background: var(--panel-active);
     }
 
-    .power-bar-wrap:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), var(--inner-shadow)
-    }
-
-    .power-bar-header {
-      display: flex;
-      justify-content: space-between;
+    .lang-badge,
+    .mn-emotion,
+    .ct-do,
+    .ct-avoid {
+      display: inline-flex;
       align-items: center;
-      margin-bottom: 8px
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(79, 142, 247, .45);
+      color: var(--accent);
+      font-size: 11px;
+      margin-bottom: 8px;
+      background: rgba(79, 142, 247, .08);
     }
 
-    .power-bar-title {
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 600
-    }
-
-    .power-bar-score {
-      font-family: var(--font-mono);
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--cyan);
-      font-variant-numeric: tabular-nums
-    }
-
-    .power-bar-labels {
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--font-mono);
-      font-size: .65rem;
-      color: var(--text3);
-      margin-bottom: 4px
-    }
-
-    .power-bar-track {
-      height: 8px;
-      background: linear-gradient(90deg, var(--danger) 0%, var(--text3) 50%, var(--cyan) 100%);
-      position: relative;
-      overflow: visible;
-      opacity: .25
-    }
-
-    .power-bar-center {
-      position: absolute;
-      top: -2px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      height: 12px;
-      background: rgba(255, 255, 255, 0.6);
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.3)
-    }
-
-    .power-bar-indicator {
-      position: absolute;
-      top: -6px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--cyan);
-      border: 2px solid var(--bg);
-      transition: left .6s cubic-bezier(.4, 0, .2, 1);
-      transform: translateX(-50%);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.5)
-    }
-
-    /* Score ring */
-    .score-ring-wrap {
-      background: rgba(0, 10, 0, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 14px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: all var(--transition);
-      box-shadow: var(--inner-shadow)
-    }
-
-    .score-ring-wrap:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), var(--inner-shadow)
-    }
-
-    .score-ring-svg {
-      width: 72px;
-      height: 72px;
-      flex-shrink: 0
-    }
-
-    .score-ring-bg {
-      fill: none;
-      stroke: var(--border);
-      stroke-width: 6
-    }
-
-    .score-ring-fill {
-      fill: none;
-      stroke: var(--cyan);
-      stroke-width: 6;
-      stroke-linecap: round;
-      transition: stroke-dashoffset .8s cubic-bezier(.4, 0, .2, 1), stroke .5s ease;
-      transform: rotate(-90deg);
-      transform-origin: center
-    }
-
-    .score-ring-text {
-      fill: var(--cyan);
-      font-size: 18px;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      text-anchor: middle;
-      dominant-baseline: central
-    }
-
-    .score-ring-info {
-      flex: 1
-    }
-
-    .score-ring-label {
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 600;
-      margin-bottom: 3px
-    }
-
-    .score-ring-desc {
-      font-size: .82rem;
-      color: var(--text2);
-      line-height: 1.5
-    }
-
-    /* Whisper panel */
-    .whisper-panel {
-      background: rgba(5, 15, 20, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 14px;
-      position: relative;
-      overflow: hidden;
-      transition: all var(--transition);
-      box-shadow: var(--inner-shadow)
-    }
-
-    .whisper-panel:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), var(--inner-shadow)
-    }
-
-    .whisper-panel::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 2px;
-      height: 100%;
-      background: var(--cyan);
-      box-shadow: 1px 0 10px rgba(0, 240, 255, 0.5)
-    }
-
-    .whisper-header {
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 600;
-      margin-bottom: 6px;
-      padding-left: 10px;
-      color: rgba(0, 240, 255, 0.6)
-    }
-
-    .whisper-text {
-      font-family: var(--font-mono);
-      font-size: .92rem;
-      color: var(--text);
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-      line-height: 1.6;
-      padding-left: 10px;
-      min-height: 20px
-    }
-
-    .whisper-cursor {
-      display: inline-block;
-      width: 8px;
-      height: 1em;
-      background: var(--cyan);
-      animation: blink .8s step-end infinite;
-      vertical-align: text-bottom;
-      margin-left: 1px
-    }
-
-    .whisper-prev {
-      font-family: var(--font-mono);
-      font-size: .78rem;
-      color: var(--text3);
-      padding-left: 10px;
-      margin-top: 6px;
-      line-height: 1.5
-    }
-
-    /* Momentum */
-    .momentum-wrap {
-      background: rgba(0, 10, 0, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 12px 14px;
-      transition: all var(--transition);
-      box-shadow: var(--inner-shadow)
-    }
-
-    .momentum-wrap:hover {
-      border-color: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), var(--inner-shadow)
-    }
-
-    .momentum-header {
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 600;
-      margin-bottom: 6px
-    }
-
-    .momentum-canvas-wrap {
-      height: 48px;
-      position: relative
-    }
-
-    /* ── Toast ─────────────────────────────────────────────── */
     #toast-container {
       position: fixed;
       bottom: 14px;
-      left: 14px;
-      z-index: 10000;
+      right: 14px;
+      z-index: 1500;
       display: flex;
       flex-direction: column-reverse;
-      gap: 6px;
-      max-width: 340px
+      gap: 8px;
+      max-width: 360px;
     }
 
     .toast {
-      padding: 10px 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #2a2a2a;
+      background: #171717;
       color: #fff;
-      font-size: .82rem;
-      font-family: var(--font-mono);
+      font-size: 13px;
       opacity: 0;
-      transform: translateX(-30px);
-      transition: all .3s ease;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      line-height: 1.5;
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border)
+      transform: translateY(8px);
+      transition: all .25s ease;
+      box-shadow: var(--card-shadow);
     }
 
     .toast.show {
       opacity: 1;
-      transform: translateX(0)
+      transform: translateY(0);
     }
 
     .toast.t-red {
-      background: rgba(80, 10, 10, 0.95);
-      border-left: 2px solid var(--danger)
+      border-left: 3px solid var(--danger);
     }
 
     .toast.t-yellow {
-      background: rgba(80, 50, 0, 0.95);
-      border-left: 2px solid var(--warning)
+      border-left: 3px solid var(--warning);
     }
 
-    .toast.t-blue {
-      background: rgba(0, 30, 60, 0.95);
-      border-left: 2px solid #3b82f6
-    }
-
-    .toast.t-cyan {
-      background: rgba(0, 40, 10, 0.95);
-      border-left: 2px solid var(--cyan)
-    }
-
+    .toast.t-blue,
+    .toast.t-cyan,
     .toast.t-default {
-      background: rgba(10, 10, 10, 0.95);
-      border-left: 2px solid var(--cyan)
+      border-left: 3px solid var(--accent);
     }
 
-    /* ── Connection banner ────────────────────────────────── */
-    #conn-banner {
+    .sidebar {
       position: fixed;
       top: 0;
-      left: 0;
-      right: 0;
-      padding: 6px;
-      text-align: center;
-      background: rgba(255, 51, 51, 0.9);
-      backdrop-filter: blur(8px);
-      color: #fff;
-      font-size: .78rem;
-      font-family: var(--font-mono);
-      z-index: 9998;
-      transform: translateY(-100%);
-      transition: transform .3s ease
-    }
-
-    #conn-banner.visible {
-      transform: translateY(0)
-    }
-
-    /* ── Consent banner ───────────────────────────────────── */
-    #consent-banner {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 6px 14px;
-      background: rgba(80, 50, 0, 0.9);
-      backdrop-filter: blur(8px);
-      color: var(--warning);
-      font-size: .78rem;
-      font-family: var(--font-mono);
-      border-bottom: 1px solid rgba(255, 170, 0, 0.3)
-    }
-
-    #consent-banner.visible {
-      display: flex
-    }
-
-    #consent-banner button {
-      background: none;
-      border: none;
-      color: var(--warning);
-      font-size: 1rem;
-      cursor: pointer;
-      padding: 0 4px;
-      flex-shrink: 0
-    }
-
-    /* ── Cultural tip ─────────────────────────────────────── */
-    #cultural-tip-card {
-      background: rgba(0, 10, 0, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 14px;
-      border-left: 2px solid var(--cyan);
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity .4s ease, transform .4s ease;
-      display: none
-    }
-
-    #cultural-tip-card.visible {
-      opacity: 1;
-      transform: translateY(0);
-      display: block
-    }
-
-    .ct-header {
-      font-family: var(--font-mono);
-      font-size: .75rem;
-      color: var(--cyan);
-      font-weight: 600;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: .04em
-    }
-
-    .ct-tip {
-      font-size: .88rem;
-      color: var(--text);
-      margin-bottom: 8px;
-      line-height: 1.6
-    }
-
-    .ct-actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap
-    }
-
-    .ct-do {
-      background: var(--dim);
-      color: var(--cyan);
-      padding: 3px 8px;
-      font-size: .72rem;
-      font-family: var(--font-mono)
-    }
-
-    .ct-avoid {
-      background: rgba(255, 51, 51, .1);
-      color: var(--danger);
-      padding: 3px 8px;
-      font-size: .72rem;
-      font-family: var(--font-mono)
-    }
-
-    /* ── Agent actions ────────────────────────────────────── */
-    #agent-actions-card {
-      background: rgba(0, 10, 0, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      padding: 14px
-    }
-
-    #agent-actions-list {
+      bottom: 0;
+      width: min(360px, 84vw);
+      background: #111;
+      border-right: 1px solid #1f1f1f;
+      transform: translateX(-102%);
+      transition: transform .25s ease;
+      z-index: 1450;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      min-height: 24px
+      box-shadow: 0 22px 44px rgba(0, 0, 0, .45);
     }
 
-    .agent-action-item {
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    #meeting-sidebar {
+      left: auto;
+      right: 0;
+      border-right: 0;
+      border-left: 1px solid #1f1f1f;
+      transform: translateX(102%);
+    }
+
+    #meeting-sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-hdr {
+      padding: 14px;
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      animation: slideUp .3s ease forwards
-    }
-
-    .aa-icon {
-      font-size: 1.1rem;
-      flex-shrink: 0;
-      margin-top: 1px
-    }
-
-    .aa-body {
-      flex: 1;
-      min-width: 0
-    }
-
-    .aa-type {
-      font-family: var(--font-mono);
-      font-size: .68rem;
-      color: var(--text3);
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1f1f1f;
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 600;
-      margin-bottom: 2px
+      letter-spacing: .16em;
+      color: var(--label);
+      font-weight: 700;
     }
 
-    .aa-desc {
-      font-size: .82rem;
-      color: var(--text);
-      line-height: 1.4;
-      word-break: break-word
+    .sidebar-list {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .aa-time {
-      font-family: var(--font-mono);
-      font-size: .65rem;
-      color: var(--text3);
-      margin-top: 2px
+    .export-btn {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #30508a;
+      color: var(--accent);
+      font-size: 13px;
     }
 
-    .aa-empty {
-      color: var(--text3);
-      font-size: .82rem;
-      font-family: var(--font-mono)
-    }
-
-    /* ── Emergency ────────────────────────────────────────── */
     #emergency-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .7);
-      backdrop-filter: blur(4px);
-      z-index: 9989;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(3px);
       opacity: 0;
       pointer-events: none;
-      transition: opacity .3s ease
+      transition: opacity .2s ease;
+      z-index: 1700;
     }
 
     #emergency-overlay.visible {
       opacity: 1;
-      pointer-events: all
+      pointer-events: all;
     }
 
     #emergency-panel {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0.9);
-      background: rgba(10, 0, 0, 0.97);
-      backdrop-filter: blur(20px);
-      border: 2px solid var(--danger);
-      padding: 24px;
-      z-index: 9990;
-      width: 340px;
+      transform: translate(-50%, -50%) scale(.96);
+      width: min(360px, calc(100% - 28px));
+      border-radius: 12px;
+      border: 1px solid rgba(255, 77, 79, .7);
+      background: rgba(26, 12, 14, .96);
+      padding: 18px;
       opacity: 0;
       pointer-events: none;
-      transition: all .3s ease;
-      box-shadow: 0 0 60px rgba(255, 51, 51, .3)
+      transition: all .2s ease;
+      z-index: 1710;
     }
 
     #emergency-panel.visible {
       opacity: 1;
+      pointer-events: all;
       transform: translate(-50%, -50%) scale(1);
-      pointer-events: all
     }
 
     #emergency-panel h2 {
-      color: var(--danger);
-      font-family: var(--font-mono);
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-      text-align: center
+      font-size: 18px;
+      margin-bottom: 12px;
+      text-align: center;
+      color: #fca5a5;
     }
 
     .emergency-btns {
       display: flex;
       gap: 8px;
-      margin-bottom: 10px
+      margin-bottom: 8px;
+    }
+
+    .emergency-btns a,
+    .btn-112,
+    .btn-dismiss {
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid #2a2a2a;
+      text-align: center;
+      font-size: 13px;
     }
 
     .emergency-btns a {
       flex: 1;
-      padding: 10px;
-      text-decoration: none;
-      text-align: center;
-      font-size: .82rem;
-      font-weight: 600;
-      font-family: var(--font-mono);
-      transition: all var(--transition)
     }
 
     .btn-hospital {
-      background: rgba(0, 240, 255, .08);
-      color: var(--cyan);
-      border: 1px solid rgba(0, 240, 255, .2)
-    }
-
-    .btn-hospital:hover {
-      background: rgba(0, 240, 255, .15)
+      border-color: #30508a;
+      color: var(--accent);
+      background: rgba(79, 142, 247, .1);
     }
 
     .btn-police {
-      background: rgba(59, 130, 246, .08);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, .2)
-    }
-
-    .btn-police:hover {
-      background: rgba(59, 130, 246, .15)
+      border-color: rgba(96, 165, 250, .55);
+      color: #bfdbfe;
+      background: rgba(59, 130, 246, .12);
     }
 
     .btn-112 {
-      display: block;
       width: 100%;
-      padding: 10px;
-      background: var(--danger);
-      color: #fff;
-      border: none;
-      font-size: .95rem;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: var(--font-mono);
       margin-bottom: 8px;
-      transition: all var(--transition)
-    }
-
-    .btn-112:hover {
-      background: #cc0000
+      border-color: rgba(255, 77, 79, .65);
+      color: #fff;
+      background: rgba(255, 77, 79, .25);
+      font-weight: 700;
     }
 
     .btn-dismiss {
-      display: block;
       width: 100%;
-      padding: 6px;
-      background: transparent;
-      color: var(--text3);
-      border: 1px solid var(--border);
-      font-size: .78rem;
-      cursor: pointer;
-      font-family: var(--font-mono);
-      transition: all var(--transition)
+      color: #bbb;
+      background: #1a1a1a;
     }
 
-    .btn-dismiss:hover {
-      border-color: var(--cyan);
-      color: var(--cyan)
-    }
-
-    /* ── Mobile Layout ────────────────────────────────────── */
-    @media (max-width:768px) {
+    @media (max-width: 980px) {
       html,
       body {
-        height: 100vh;
-        overflow: hidden;
-        overflow-x: hidden;
-        -webkit-tap-highlight-color: transparent;
+        overflow: auto;
       }
 
-      body {
-        display: flex;
-        flex-direction: column;
-        margin: 0 !important;
-        padding: 0 !important;
+      .dashboard.main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        overflow: auto;
       }
 
-      ::-webkit-scrollbar {
-        width: 0;
-        height: 0;
+      .left-panel {
+        grid-template-rows: auto minmax(220px, 42vh) auto auto;
       }
 
-      #conn-banner,
-      #consent-banner,
-      .conn-banner {
-        margin: 0 !important;
-        padding: 0 !important;
-        top: 0 !important;
-        min-height: 0 !important;
-        height: 0 !important;
-        border: 0 !important;
-        overflow: hidden;
-      }
-
-      #conn-banner,
-      .conn-banner,
-      #conn-banner:empty,
-      #consent-banner:not(.visible) {
-        display: none !important;
-      }
-
-      #consent-banner.visible {
-        display: flex;
-        height: auto !important;
-        padding: 6px 12px !important;
-        overflow: visible;
-        border-bottom: 1px solid rgba(255, 170, 0, 0.3) !important;
-      }
-
-      header {
-        flex-shrink: 0;
-        flex-wrap: wrap;
-        align-items: center;
-        row-gap: 8px;
-        column-gap: 10px;
-        margin: 0 !important;
-        padding: 10px 12px !important;
-        top: 0 !important;
-        height: auto !important;
-        min-height: 0 !important;
-        position: relative !important;
-      }
-
-      .header-left,
-      .header-right {
-        flex: 1 1 auto;
-        min-width: 0;
-      }
-
-      .header-right {
-        justify-content: flex-end;
-      }
-
-      .logo {
-        font-size: 16px;
-      }
-
-      .home-link {
-        font-size: 0;
-        width: 24px;
-        min-width: 24px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .home-link::before {
-        content: "<-";
-        font-size: 16px;
-        font-family: var(--font-mono);
-        color: var(--text2);
-      }
-
-      #speakerIcon {
-        display: none;
-      }
-
-      .header-center {
-        order: 3;
-        display: flex;
-        flex-direction: row;
-        width: 100%;
-        margin: 0 !important;
-        padding: 0 16px 0 0 !important;
-        overflow-x: auto;
-        overflow-y: hidden;
-        flex-wrap: nowrap;
-        gap: 8px;
-        scrollbar-width: none;
-      }
-
-      .header-center::-webkit-scrollbar {
-        display: none;
-      }
-
-      .mode-btn {
-        min-width: 85px;
-        height: 36px;
-        min-height: 36px;
-        flex-shrink: 0;
-        font-size: 10px;
-        padding: 5px 8px;
-      }
-
-      .main {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        overflow-x: hidden;
-        margin: 0 !important;
-        padding: 0 !important;
-        gap: 0 !important;
-        top: 0 !important;
-        min-height: 0 !important;
-        height: auto !important;
-      }
-
-      .camera-panel {
-        width: 100%;
-        flex: 0 0 auto;
-        gap: 8px;
-        margin: 0 !important;
-        padding: 0 !important;
-        top: 0 !important;
-        min-height: 0 !important;
-        height: auto !important;
-      }
-
-      .camera-wrap {
-        width: 100% !important;
-        height: 220px !important;
-        flex-shrink: 0;
-        margin: 0 !important;
-        padding: 0 !important;
-        top: 0 !important;
-        min-height: 0 !important;
-      }
-
-      .emotion-meter {
-        width: 100%;
-        padding: 10px;
-        margin: 0;
-      }
-
-      .emotion-meter-label {
-        font-size: 11px;
-      }
-
-      .emotion-meter-track {
-        width: 100%;
-        height: 6px;
-      }
-
-      #stress-tracker,
-      .stress-bar-wrap,
-      .momentum-wrap {
-        display: none !important;
-      }
-
-      .analysis-panel {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        width: 100%;
-        padding: 8px !important;
-        overflow: visible;
-        min-height: 0;
-        height: auto !important;
-      }
-
-      .analysis-panel > * {
-        width: 100%;
-      }
-
-      .card,
-      .power-bar-wrap,
-      .score-ring-wrap,
-      .whisper-panel,
-      #cultural-tip-card,
-      #agent-actions-card,
-      .mic-area,
-      .meeting-note-item,
-      .history-card {
-        width: 100%;
-        padding: 10px !important;
-        height: auto !important;
-        min-height: 0 !important;
-      }
-
-      .card-header,
-      .power-bar-title,
-      .score-ring-label,
-      .whisper-header,
-      .momentum-header,
-      .ct-header {
-        font-size: 10px;
-      }
-
-      .card-body,
-      .ct-tip,
-      .score-ring-desc,
-      .whisper-text,
-      .mn-text,
-      .aa-desc,
-      .history-card,
-      .hc-subtext {
-        font-size: 13px;
-      }
-
-      .power-bar-wrap,
-      .power-bar-track,
-      .emotion-meter-fill {
-        width: 100%;
-      }
-
-      .power-bar-labels {
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-
-      .power-bar-labels span:nth-child(2) {
-        display: none;
-      }
-
-      .power-bar-labels span:nth-child(1),
-      .power-bar-labels span:nth-child(3) {
-        color: transparent;
-        position: relative;
-      }
-
-      .power-bar-labels span:nth-child(1)::after,
-      .power-bar-labels span:nth-child(3)::after {
-        position: absolute;
-        top: 0;
-        left: 0;
-        color: var(--text3);
-        font-family: var(--font-mono);
-      }
-
-      .power-bar-labels span:nth-child(1)::after {
-        content: "THEM";
-      }
-
-      .power-bar-labels span:nth-child(3)::after {
-        content: "YOU";
-      }
-
-      #history-sidebar {
-        position: fixed;
-        inset: 0;
-        width: 100% !important;
-        height: 100vh;
-        z-index: 2000;
-        transform: translateX(-100%);
-        transition: transform .3s ease;
-      }
-
-      #history-sidebar.open {
-        transform: translateX(0);
-      }
-
-      #history-sidebar .sidebar-hdr {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-      }
-
-      button,
-      .mode-btn,
-      .icon-btn,
-      .export-btn,
-      .retry-btn,
-      .stress-toggle-btn,
-      .mic-btn,
-      .btn-112,
-      .btn-dismiss,
-      .emergency-btns a {
-        min-height: 44px;
+      .right-panel.analysis-panel {
+        grid-template-rows: repeat(4, minmax(140px, 1fr));
       }
     }
   </style>
@@ -1782,14 +922,12 @@
 
 <body>
 
-  <!-- Banners -->
   <div id="conn-banner"></div>
   <div id="consent-banner">
     <span>&#128308; ToneLens Active - All parties should be aware tone analysis is running</span>
     <button id="dismissConsent" title="Dismiss">&times;</button>
   </div>
 
-  <!-- Emergency -->
   <div id="emergency-overlay"></div>
   <div id="emergency-panel">
     <h2>&#128680; DISTRESS DETECTED</h2>
@@ -1801,184 +939,180 @@
     <button class="btn-dismiss" id="dismissEmergency">Dismiss</button>
   </div>
 
-  <!-- Toast -->
   <div id="toast-container"></div>
 
-  <!-- Header -->
-  <header>
-    <div class="header-left">
-      <a href="/" class="home-link">&larr; HOME</a>
-      <div class="logo"><a href="/app">ToneLens</a><span class="logo-cursor"></span></div>
-    </div>
-    <div class="header-center">
-      <button class="mode-btn active" data-mode="travel">&#127757; Travel</button>
-      <button class="mode-btn" data-mode="meeting">&#128188; Meeting</button>
-      <button class="mode-btn" data-mode="present">&#127908; Present</button>
-      <button class="mode-btn" data-mode="negotiate">&#9878;&#65039; Negotiate</button>
-    </div>
-    <div class="header-right">
-      <div class="conn-status">
-        <span class="conn-dot" id="connDot"></span>
-        <span id="connLabel">OFFLINE</span>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <a href="/" class="home-link">Home</a>
+        <div class="logo"><a href="/app">ToneLens</a></div>
       </div>
-      <button class="icon-btn" id="historyBtn" title="History">&#128203;</button>
-      <span class="speaker-icon" id="speakerIcon">&#128264;</span>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <div class="main">
-
-    <!-- History sidebar -->
-    <div class="sidebar" id="history-sidebar">
-      <div class="sidebar-hdr">
-        <span>> history</span>
-        <button id="closeHistoryBtn">&times;</button>
-      </div>
-      <div class="sidebar-list" id="history-list">
-        <div class="hc-empty">> no_history_found. start a conversation.</div>
-      </div>
-    </div>
-
-    <!-- Meeting notes sidebar -->
-    <div class="sidebar" id="meeting-sidebar">
-      <div class="sidebar-hdr">
-        <span>> meeting_notes</span>
-        <button id="exportNotesBtn" title="Export">&#128229;</button>
-      </div>
-      <div class="sidebar-list" id="meeting-notes-list">
-        <div class="hc-empty">> awaiting_notes...</div>
-      </div>
-      <button class="export-btn" id="export-notes-btn">[ EXPORT .TXT ]</button>
-    </div>
-
-    <!-- Camera + mic -->
-    <div class="camera-panel">
-      <div class="camera-wrap" id="cameraWrap">
-        <video id="video" autoplay playsinline muted></video>
-        <canvas id="canvas"></canvas>
-        <div class="emotion-badge" id="emotionBadge">
-          <span class="emo-icon" id="emoIcon">&#128524;</span>
-          <span class="emo-label" id="emoLabel">calm</span>
-          <span class="emo-conf" id="emoConf">70%</span>
+      <div class="topbar-right">
+        <div class="conn-status">
+          <span class="conn-dot" id="connDot"></span>
+          <span id="connLabel">OFFLINE</span>
         </div>
-        <div class="camera-error" id="cameraError" style="display:none">
-          <div class="icon">&#128247;</div>
-          <p>Enable camera access to use ToneLens</p>
-          <button class="retry-btn" id="retryCamera">[ RETRY ]</button>
-        </div>
+        <button class="icon-btn" id="historyBtn" title="History">&#128203;</button>
+        <span class="speaker-icon" id="speakerIcon">&#128264;</span>
       </div>
+    </header>
 
-      <div class="emotion-meter" id="emotionMeter">
-        <div class="emotion-meter-header">
-          <div class="emotion-meter-label" id="emotionMeterLabel">calm - 70%</div>
-          <button class="stress-toggle-btn" id="stressToggleBtn">&#128200; stress</button>
-        </div>
-        <div class="emotion-meter-track">
-          <div class="emotion-meter-fill" id="emotionMeterFill"></div>
-        </div>
-      </div>
-
-      <div id="stress-tracker">
-        <div class="stress-chart-wrap"><canvas id="stressChart"></canvas></div>
-      </div>
-
-      <div class="mic-area">
-        <div class="waveform" id="waveform">
-          <div class="bar" style="height:3px"></div>
-          <div class="bar" style="height:3px"></div>
-          <div class="bar" style="height:3px"></div>
-          <div class="bar" style="height:3px"></div>
-          <div class="bar" style="height:3px"></div>
-        </div>
-        <button class="mic-btn" id="micBtn">&#127908;</button>
-        <span class="mic-status" id="micStatus">> ready</span>
-      </div>
-    </div>
-
-    <!-- Analysis panel -->
-    <div class="analysis-panel">
-
-      <div class="card" id="translationCard">
-        <div class="card-header" id="labelTranslation">[>] TRANSLATION</div>
-        <div class="lang-badge" id="langBadge" style="display:none"></div>
-        <div class="card-body" id="translationText">> awaiting speech...</div>
-      </div>
-
-      <div id="cultural-tip-card">
-        <div class="ct-header" id="ctHeader">[>] CULTURAL TIP</div>
-        <div class="ct-tip" id="ctTip"></div>
-        <div class="ct-actions">
-          <span class="ct-do" id="ctDo"></span>
-          <span class="ct-avoid" id="ctAvoid"></span>
-        </div>
-      </div>
-
-      <div class="card" id="subtextCard">
-        <div class="card-header" id="labelSubtext">[>] EMOTIONAL CONTEXT</div>
-        <div class="card-body" id="subtextText">> insight will appear here...</div>
-      </div>
-
-      <div class="card" id="suggestionCard">
-        <div class="card-header" id="labelSuggestion">[>] SUGGESTION</div>
-        <div class="card-body" id="suggestionText">> suggestion will appear here...</div>
-      </div>
-
-      <!-- Negotiate panel -->
-      <div id="negotiate-panel">
-        <div class="power-bar-wrap">
-          <div class="power-bar-header">
-            <span class="power-bar-title">[>] POWER BALANCE</span>
-            <span class="power-bar-score" id="powerScore">50</span>
-          </div>
-          <div class="power-bar-labels">
-            <span>They lead</span><span>Balanced</span><span>You lead</span>
-          </div>
-          <div class="power-bar-track">
-            <div class="power-bar-center"></div>
-            <div class="power-bar-indicator" id="powerIndicator" style="left:50%"></div>
+    <div class="dashboard main">
+      <section class="left-panel">
+        <div class="mode-strip">
+          <div class="mode-tabs header-center">
+            <button class="mode-btn active" data-mode="travel">Travel</button>
+            <button class="mode-btn" data-mode="meeting">Meeting</button>
+            <button class="mode-btn" data-mode="present">Present</button>
+            <button class="mode-btn" data-mode="negotiate">Negotiate</button>
+            <button class="mode-btn mode-disabled" type="button">Crisis Response</button>
+            <button class="mode-btn mode-disabled" type="button">Hospitality</button>
           </div>
         </div>
 
-        <div class="score-ring-wrap">
-          <svg class="score-ring-svg" viewBox="0 0 80 80">
-            <circle class="score-ring-bg" cx="40" cy="40" r="34" />
-            <circle class="score-ring-fill" id="scoreRingFill" cx="40" cy="40" r="34" stroke-dasharray="213.6"
-              stroke-dashoffset="213.6" />
-            <text class="score-ring-text" id="scoreRingText" x="40" y="40">50</text>
-          </svg>
-          <div class="score-ring-info">
-            <div class="score-ring-label">Negotiation Score</div>
-            <div class="score-ring-desc" id="scoreRingDesc">Balanced position - maintain composure</div>
+        <div class="camera-wrap" id="cameraWrap">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="canvas"></canvas>
+          <div class="emotion-badge" id="emotionBadge">
+            <span class="emo-icon" id="emoIcon">&#128524;</span>
+            <span class="emo-label" id="emoLabel">calm</span>
+            <span class="emo-conf" id="emoConf">70%</span>
+          </div>
+          <div class="camera-error" id="cameraError" style="display:none">
+            <div class="icon">&#128247;</div>
+            <p>Enable camera access to use ToneLens</p>
+            <button class="retry-btn" id="retryCamera">Retry</button>
           </div>
         </div>
 
-        <div class="whisper-panel">
-          <div class="whisper-header">[>] COACH WHISPER</div>
-          <div class="whisper-text" id="whisperText"><span class="whisper-cursor"></span></div>
-          <div class="whisper-prev" id="whisperPrev"></div>
+        <div class="emotion-meter" id="emotionMeter">
+          <div class="emotion-meter-header">
+            <div class="emotion-meter-label" id="emotionMeterLabel">calm - 70%</div>
+            <button class="stress-toggle-btn" id="stressToggleBtn">Stress</button>
+          </div>
+          <div class="emotion-meter-track">
+            <div class="emotion-meter-fill" id="emotionMeterFill"></div>
+          </div>
+          <div id="stress-tracker">
+            <div class="stress-chart-wrap"><canvas id="stressChart"></canvas></div>
+          </div>
         </div>
 
-        <div class="momentum-wrap">
-          <div class="momentum-header">[>] MOMENTUM</div>
-          <div class="momentum-canvas-wrap"><canvas id="momentumChart"></canvas></div>
+        <div class="mic-area" id="micArea">
+          <div class="mic-row">
+            <span class="mic-row-dot"></span>
+            <span class="mic-status" id="micStatus">ready</span>
+          </div>
+          <div class="waveform" id="waveform">
+            <div class="bar" style="height:3px"></div>
+            <div class="bar" style="height:3px"></div>
+            <div class="bar" style="height:3px"></div>
+            <div class="bar" style="height:3px"></div>
+            <div class="bar" style="height:3px"></div>
+          </div>
+          <button class="mic-btn" id="micBtn" aria-label="Toggle microphone"></button>
+        </div>
+      </section>
+
+      <section class="right-panel analysis-panel">
+        <div class="card" id="translationCard">
+          <div class="card-header" id="labelTranslation">Translation</div>
+          <div class="lang-badge" id="langBadge" style="display:none"></div>
+          <div class="card-body" id="translationText">Awaiting speech...</div>
+        </div>
+
+        <div class="card" id="subtextCard">
+          <div class="card-header" id="labelSubtext">Emotional Context</div>
+          <div class="card-body" id="subtextText">Insight will appear here...</div>
+        </div>
+
+        <div class="card" id="suggestionCard">
+          <div class="card-header" id="labelSuggestion">Suggestion</div>
+          <div class="card-body" id="suggestionText">Suggestion will appear here...</div>
+        </div>
+
+        <div class="card" id="transcriptCard">
+          <div class="card-header">Transcript</div>
+          <div class="card-body" id="transcriptText"></div>
+        </div>
+
+        <div id="cultural-tip-card">
+          <div class="ct-header" id="ctHeader">Cultural Tip</div>
+          <div class="ct-tip" id="ctTip"></div>
+          <div class="ct-actions">
+            <span class="ct-do" id="ctDo"></span>
+            <span class="ct-avoid" id="ctAvoid"></span>
+          </div>
+        </div>
+
+        <div id="negotiate-panel">
+          <div class="power-bar-wrap">
+            <div class="power-bar-header">
+              <span class="power-bar-title">Power Balance</span>
+              <span class="power-bar-score" id="powerScore">50</span>
+            </div>
+            <div class="power-bar-labels">
+              <span>They lead</span><span>Balanced</span><span>You lead</span>
+            </div>
+            <div class="power-bar-track">
+              <div class="power-bar-center"></div>
+              <div class="power-bar-indicator" id="powerIndicator" style="left:50%"></div>
+            </div>
+          </div>
+
+          <div class="score-ring-wrap">
+            <svg class="score-ring-svg" viewBox="0 0 80 80">
+              <circle class="score-ring-bg" cx="40" cy="40" r="34" />
+              <circle class="score-ring-fill" id="scoreRingFill" cx="40" cy="40" r="34" stroke-dasharray="213.6"
+                stroke-dashoffset="213.6" />
+              <text class="score-ring-text" id="scoreRingText" x="40" y="40">50</text>
+            </svg>
+            <div class="score-ring-info">
+              <div class="score-ring-label">Negotiation Score</div>
+              <div class="score-ring-desc" id="scoreRingDesc">Balanced position - maintain composure</div>
+            </div>
+          </div>
+
+          <div class="whisper-panel">
+            <div class="whisper-header">Coach Whisper</div>
+            <div class="whisper-text" id="whisperText"><span class="whisper-cursor"></span></div>
+            <div class="whisper-prev" id="whisperPrev"></div>
+          </div>
+
+          <div class="momentum-wrap">
+            <div class="momentum-header">Momentum</div>
+            <div class="momentum-canvas-wrap"><canvas id="momentumChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card" id="agent-actions-card">
+          <div class="card-header">Agent Actions</div>
+          <div id="agent-actions-list">
+            <div class="aa-empty">Agent will act on events automatically...</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="sidebar" id="history-sidebar">
+        <div class="sidebar-hdr">
+          <span>History</span>
+          <button id="closeHistoryBtn">&times;</button>
+        </div>
+        <div class="sidebar-list" id="history-list">
+          <div class="hc-empty">No history found. Start a conversation.</div>
         </div>
       </div>
 
-      <div class="card" id="agent-actions-card">
-        <div class="card-header">[>] AGENT ACTIONS</div>
-        <div id="agent-actions-list">
-          <div class="aa-empty">> agent will act on events automatically...</div>
+      <div class="sidebar" id="meeting-sidebar">
+        <div class="sidebar-hdr">
+          <span>Meeting Notes</span>
+          <button id="exportNotesBtn" title="Export">&#128229;</button>
         </div>
-      </div>
-
-      <div class="card" id="transcriptCard">
-        <div class="card-header">[>] TRANSCRIPT</div>
-        <div class="card-body" id="transcriptText"
-          style="max-height:100px;overflow-y:auto;font-size:.78rem;color:var(--text3);font-family:var(--font-mono)">
+        <div class="sidebar-list" id="meeting-notes-list">
+          <div class="hc-empty">Awaiting notes...</div>
         </div>
+        <button class="export-btn" id="export-notes-btn">Export .txt</button>
       </div>
-
     </div>
   </div>
 
